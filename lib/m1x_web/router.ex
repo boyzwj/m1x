@@ -38,7 +38,11 @@ defmodule M1xWeb.Router do
     scope "/" do
       pipe_through :browser
 
-      live_dashboard "/dashboard", metrics: M1xWeb.Telemetry
+      live_dashboard "/dashboard",
+        metrics: M1xWeb.Telemetry,
+        additional_pages: [
+          flame_on: FlameOn.DashboardPage
+        ]
     end
   end
 
