@@ -1,0 +1,51 @@
+   
+<div>
+
+
+  <div class="flex space-x-4 bg-yellow-300 p-2 m-2">
+    <button class ="btn" phx-click="restart">Restart</button> 
+    <button class ="btn" phx-click="cleardb">ClearDB</button>
+ </div>
+
+
+    <div class="flex items-center bg-blue-300 rounded-lg m-2 px-5">
+    <p class = "text-3xl"> Onlines:</p> <p class="text-5xl px-5 text-orange-500"> <%= @online_num %>  </p>
+    </div>
+    <div class = "m-2">
+    <%= if length(@player_infos) > 0  do%>
+    <table class="table-auto border-collapse-1 border-3 bg-gray-500 text-indigo-100 rounded-lg">
+      <thead>
+        <tr>
+          <th class="px-5 text-left ">账号</th>
+          <th class="px-5 text-center ">名称</th>
+          <th class="px-5 text-center ">等级</th>
+          <th class="px-5 text-right">段位</th>
+        </tr>
+      </thead>
+      <tbody>
+        <%= for info <- @player_infos do %>
+         <tr class="bg-blue-900">
+         <td class ="px-5 text-left"> <%= info.account %> </td>
+         <td class ="px-5 text-center">  <%= info.role_name %> </td>
+         <td class ="px-5 text-center"> <%= info.level %> </td>
+         <td class ="px-5 text-right">  <%= info.rank %> </td>
+         </tr>
+        <% end%>
+      </tbody>
+    </table>
+    <% end %>
+    </div>
+
+
+    
+
+  
+  <div class="flex space-x-4 bg-gray-900 p-2 m-2">
+    <%= for log_file <- @log_files do %>
+        <button class="downfile"><%= link log_file, to: "/get_log?f=#{log_file}" %></button>
+    <% end %>
+ </div>
+
+
+
+</div>

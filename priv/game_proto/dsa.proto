@@ -1,0 +1,137 @@
+syntax = "proto3";
+package pbm.dsa;
+
+message Start2S{
+    uint32 result = 1;
+    uint64 battle_id = 2;
+    uint32 pid = 3;
+}
+
+message BattleInfo2S
+{
+    uint64 battle_id = 1;
+}
+
+message BattleInfo
+{
+    bool auto_armor = 1;
+    bool kill_award_double = 2;
+    int32 init_hp = 3;
+    int32 max_hp = 4;
+    float gravity_rate = 5;
+    float friction_rate = 6;
+    bool head_shoot_only = 7;
+    bool stat_trak = 8;
+    uint32 game_level = 9;
+    WinType win_type = 10;
+    uint32 win_value = 11;
+
+    enum WinType 
+    {
+        none = 0;
+        round = 1;
+        kills = 2;
+        time = 3;
+    }
+}
+
+message BattleInfo2C
+{
+    uint64 battle_id = 1;
+    BattleInfo battle_info = 2;
+}
+
+message Role
+{
+    uint32 replace_uid = 1;
+    uint32 ai_property_type = 2;
+    uint32 robot = 3; // 0-人 1-机器人
+    uint32 robot_type = 4; // 1-Robot房间创建 2-FakeMan匹配添加 3-局内NPC
+    RoleBaseInfo base_info = 5;
+}
+
+message RoleBaseInfo
+{
+    uint64 uid = 1;
+    string name = 2;
+    uint32 name_id = 3;
+    uint32 group_id = 4;
+    uint32 camp_id = 5; // 0-None 1-T 2-CT 4-Neutral 8-Observer
+    uint32 avatar = 6;
+    uint32 level = 7;
+}
+
+message RoleInfo2C
+{
+    Role role = 1;
+}
+
+message RoleReady2S
+{
+    uint64 battle_id = 1;
+    uint64 player_id = 2;
+}
+
+message Heartbeat2S
+{
+    uint64 battle_id = 1;
+    uint32 pid = 2;
+    uint32 defender_score = 3;
+    uint32 attacker_score = 4;
+    uint32 online_players = 5;
+}
+
+message PlayerState2S
+{
+    uint64 battle_id = 1;
+    uint64 player_id = 2;
+    PlayerState player_state = 3;
+
+    enum PlayerState
+    {
+        success = 0;
+        fail = 1;
+        quit = 2;
+    }
+}
+
+message PlayerQuit2S
+{
+    uint64 battle_id = 1;
+    uint64 player_id = 2;
+    uint32 reason = 3;
+}
+
+message BattleResult
+{
+    uint32 game_map_id = 1;
+    uint32 round = 2;    //--总回合数
+    uint32 finish = 3;    //--结束状态 ：1 正常 2 未开局结束
+    uint32 game_duration = 4;    //局内游戏时长
+    //--阵营结算信息
+    map<uint32, BattleResultCampInfo> camp_info = 5;//--map[campid, BattleResultCampInfo]
+    map<uint64, PlayerResultDetailInfo> player_detail = 6;//--map[uid, PlayerResultDetailInfo]
+}
+
+message BattleResultCampInfo
+{
+    uint32 id = 1; //--阵营id，跟进模式对应显示
+    uint32 campRank = 2;    //--阵营排名
+    uint32 score = 3; //--爆破模式对应胜利回合数
+    uint64 mvp = 4;    //--mvp member uid
+    repeated uint64 memberUids = 5; //--list[_, uid] 以结束时刻为准
+}
+
+message PlayerResultDetailInfo
+{
+    uint32 kills = 1;
+    uint32 assist = 2;
+    uint32 deads = 3;
+}
+
+
+message GameStatis2S
+{
+    uint64 battle_id = 1;
+    BattleResult battle_result = 2;
+}

@@ -1,0 +1,46 @@
+syntax = "proto3";
+package pbm.role;
+import "common.proto";
+
+
+//请求自己的角色信息
+message Info2S{
+}
+
+
+//自己角色信息返回
+message Info2C{
+    common.RoleInfo role_info = 1;
+}
+
+//信息查询请求结构
+message InfoRequest{
+    uint64 role_id = 1;
+    uint32 timestamp = 2;
+}
+//信息返回结构
+message InfoReply{
+    uint64 role_id = 1;
+    uint32 timestamp = 2;
+    common.RoleInfo role_info = 3;
+}
+
+//请求查询他人信息
+message OtherInfo2S{
+    repeated InfoRequest requests = 1;
+}
+
+//他人信息返回
+message OtherInfo2C{
+    repeated InfoReply infos = 1;
+}
+
+//给自己取名
+message SetName2S{
+    string name  =  1;
+}
+
+//取名返回
+message SetName2C{
+    string name =  1;
+}

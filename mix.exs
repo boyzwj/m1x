@@ -35,6 +35,7 @@ defmodule M1x.MixProject do
   defp deps do
     [
       {:phoenix, "~> 1.6.11"},
+      {:tailwind, "~> 0.1.8", runtime: Mix.env() == :dev},
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.6"},
       {:postgrex, ">= 0.0.0"},
@@ -89,7 +90,7 @@ defmodule M1x.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
-      "assets.deploy": ["esbuild default --minify", "phx.digest"]
+      "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]
     ]
   end
 end

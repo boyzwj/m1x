@@ -1,0 +1,68 @@
+syntax = "proto3";
+package pbm.team;
+import "common.proto";
+
+message  Member{
+    uint64 role_id = 1;
+    uint32 position = 2;
+}
+
+message Info2S{
+}
+
+message Info2C{
+    uint64 team_id = 1;    //队伍ID
+    uint64 leader_id = 2;  //队长ID
+    repeated Member members=3; //队伍成员
+    uint32 mode = 4;  //游戏模式
+}
+
+message Create2S{
+    uint32 mode = 1; //游戏模式
+}
+
+message Create2C{
+    uint64 team_id = 1; //队伍ID
+    uint32 mode = 2;  //游戏模式
+}
+
+
+message Invite2S{
+    uint64 role_id = 1; //邀请玩家ID
+}
+
+message Invite2C{
+    uint64 role_id = 1; //邀请成功返回
+}
+
+message InviteRequest2C{
+    uint64 invitor_id = 1; //邀请人ID
+    uint32 mode = 2;    //游戏模式
+}
+
+message InviteReply2S{
+    uint32 reply = 1; //邀请回复（0拒绝 | 1同意）
+}
+
+message InviteReply2C{
+    uint64 role_id = 1; //对方ID
+    uint32 reply = 2; //邀请回复（0拒绝 | 1同意）
+}
+
+message Join2C{
+    uint64 team_id = 1; //队伍ID
+    uint64 role_id = 2; //角色ID
+}
+
+message Exit2S{
+}
+
+message Exit2C{
+    uint64 team_id = 1;  
+    uint64 role_id = 2;
+}
+
+
+//开始匹配
+message BeginMatch2S{
+}

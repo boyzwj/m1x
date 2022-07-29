@@ -1,0 +1,4 @@
+syntax = "proto3";
+package pbm.lobby;
+
+import "common.proto";

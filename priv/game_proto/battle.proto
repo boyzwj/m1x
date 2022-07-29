@@ -1,0 +1,5 @@
+syntax = "proto3";
+package pbm.battle;
+message BattleResult2C{
+    uint64 battle_id = 1;
+}

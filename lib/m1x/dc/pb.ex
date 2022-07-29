@@ -1,11 +1,11 @@
 defmodule Dc.Pb do
   use Protox,
     files:
-      File.ls!("#{:code.priv_dir(:m1x)}/proto/")
+      File.ls!("#{:code.priv_dir(:m1x)}/dc_proto/")
       |> Enum.filter(&String.ends_with?(&1, ".proto"))
-      |> Enum.map(&"#{:code.priv_dir(:m1x)}/proto/#{&1}")
+      |> Enum.map(&"#{:code.priv_dir(:m1x)}/dc_proto/#{&1}")
 
-  proto_ids = Tool.Pbid.proto_ids("#{:code.priv_dir(:m1x)}/proto/")
+  proto_ids = Tool.Pbid.proto_ids("#{:code.priv_dir(:m1x)}/dc_proto/")
 
   for %{id: id, proto: proto} <- proto_ids, m = Module.concat([proto]) do
     def proto_id(unquote(m)) do

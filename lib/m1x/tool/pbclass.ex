@@ -48,13 +48,13 @@ defmodule PBClass do
     """
   end
 
-  def create() do
-    File.write!(
-      "#{:code.priv_dir(:m1x)}/static/pbclass/game/PB.cs",
-      content(Tool.Pbid.proto_ids("./proto")),
-      [:write]
-    )
-  end
+  # def create() do
+  #   File.write!(
+  #     "#{:code.priv_dir(:m1x)}/static/pbclass/game/PB.cs",
+  #     content(Tool.Pbid.proto_ids("./proto")),
+  #     [:write]
+  #   )
+  # end
 
   def content(ids) do
     constdef = ""

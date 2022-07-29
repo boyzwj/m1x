@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
   <head>
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -9,18 +9,24 @@
     <link phx-track-static rel="stylesheet" href={Routes.static_path(@conn, "/assets/app.css")}/>
     <script defer phx-track-static type="text/javascript" src={Routes.static_path(@conn, "/assets/app.js")}></script>
   </head>
-  <body>
+  <body class ="bg-indigo-100">
     <header>
-      <section class="container">
-        <nav>
-          <ul>
+      <nav class="top-0 left-0 right-0 z-30 bg-indigo-900 shadow">
+         <div class="container mx-auto px-6 py-3 md:flex md:justify-between md:items-center">
+         <div class="flex justify-between items-center">
             <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
-              <li><%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home) %></li>
+              <button class = "btn"><%= link "System Dashboard", to: Routes.live_dashboard_path(@conn, :home) %></button>
             <% end %>
-          </ul>
+              <button class = "btn"><%= link "Download Pb", to: "/get_pbclass" %></button>
+          </div>
+          </div>
         </nav>
-      </section>
     </header>
-    <%= @inner_content %>
+      <%= @inner_content %>
+      <footer class="bg-indigo-900 mt-auto py-3">
+      <div class="container pb-4 max-w-4xl mx-auto text-center text-gray-300 text-sm">
+        &copy; <%= DateTime.utc_now.year %> Illusion Colors
+      </div>
+    </footer>
   </body>
 </html>

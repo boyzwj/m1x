@@ -1,0 +1,12 @@
+syntax = "proto3";
+package pbm.common;
+
+message RoleInfo{
+    uint64 role_id = 1; //玩家ID
+    string role_name = 2; //角色昵称
+    uint32 gender = 3;    //性别
+    uint32 head_id = 4;  //头像ID
+    uint32 avatar_id = 5; //AVATAR_ID
+    uint32 level = 6; //等级
+    uint32 rank = 7;  // 段位
+}
