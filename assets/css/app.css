@@ -4,7 +4,7 @@
 
 /* This file is for your main application CSS */
 /* @import "./phoenix.css"; */
-/* @import "./live_view.css"; */
+@import "./live_view.css";
 
 /* Alerts and form errors used by phx.new */
 .card {

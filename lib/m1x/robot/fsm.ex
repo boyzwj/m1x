@@ -46,7 +46,7 @@ defmodule Robot.FSM do
     # |> Worker.send_buf(%Chat.Chat2S{content: "这是一条聊天信息"})
     |> Worker.send_buf(%Pbm.Room.Create2S{map_id: 10_051_068, password: ""})
     |> Worker.send_buf(%Pbm.Room.List2S{})
-    |> Worker.send_buf(%Pbm.Room.Exit2S{})
+    # |> Worker.send_buf(%Pbm.Room.Exit2S{})
   end
 
   def loop(%Worker{status: @status_offline, addr: addr, port: port} = state) do
