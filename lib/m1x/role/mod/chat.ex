@@ -1,5 +1,5 @@
 defmodule Role.Mod.Chat do
-  defstruct channels: %{}, last_chat_time: nil
+  defstruct role_id: nil,channels: %{}, last_chat_time: nil
   use Role.Mod
 
   def h(~M{%M } = state, ~M{%Pbm.Chat.Chat2S channel,content}) do

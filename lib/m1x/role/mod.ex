@@ -39,11 +39,12 @@ defmodule Role.Mod do
       end
 
       defp on_init(data) do
-        data || %__MODULE__{}
+        data || %__MODULE__{role_id: role_id()}
       end
 
-      defp on_first_init(_id) do
-        %__MODULE__{}
+      defp on_first_init(role_id) do
+        IO.inspect("first init role_id :#{ role_id}")
+        %__MODULE__{role_id: role_id}
       end
 
       @doc """
@@ -143,7 +144,7 @@ defmodule Role.Mod do
       报错模块数据
       """
       def set_data(data) do
-        # Logger.info("#{__MODULE__} set data #{inspect(data)}")
+        Logger.info("#{__MODULE__} set data #{inspect(data)}")
         Process.put({__MODULE__, :data}, data)
         set_dirty(true)
       end

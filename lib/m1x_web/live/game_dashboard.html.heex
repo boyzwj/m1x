@@ -6,26 +6,36 @@
 
 
     <div class="flex items-center bg-blue-300 rounded-lg m-2 px-5">
-    <p class = "text-3xl"> Onlines:</p> <p class="text-5xl px-5 text-orange-500"> <%= @online_num %>  </p>
+    <p class = "text-3xl"> Onlines:</p> <p class="text-5xl px-5 text-orange-500"> <%= length(@player_infos) %>  </p>
     </div>
     <div class = "m-2">
     <%= if length(@player_infos) > 0  do%>
     <table class="table-auto border-collapse-1 border-3 bg-gray-500 text-indigo-100 rounded-lg">
       <thead>
         <tr>
-          <th class="px-5 text-left ">账号</th>
+          <th class="px-5 text-left ">RoleID</th>
+          <th class="px-5 text-left ">PID</th>
+          <th class="px-5 text-center ">账号</th>
           <th class="px-5 text-center ">名称</th>
+          <th class="px-5 text-center ">头像</th>
           <th class="px-5 text-center ">等级</th>
-          <th class="px-5 text-right">段位</th>
+          <th class="px-5 text-center">段位</th>
+          <th class="px-5 text-right"></th>
         </tr>
       </thead>
       <tbody>
         <%= for info <- @player_infos do %>
          <tr class="bg-blue-900">
+         <td class ="px-5 text-left"> <%= info.role_id %> </td>
+         <td class ="px-5 text-left"> <%= info.pid %> </td>
          <td class ="px-5 text-left"> <%= info.account %> </td>
-         <td class ="px-5 text-center">  <%= info.role_name %> </td>
+         <td class ="px-5 text-center"> <%= info.role_name %> </td>
+         <td class ="px-5 text-center"> <%= info.head_id %> </td>
          <td class ="px-5 text-center"> <%= info.level %> </td>
          <td class ="px-5 text-right">  <%= info.rank %> </td>
+         <td class ="px-5 text-right">  
+         <button phx-click= "kick" value={info.role_id} > 踢掉 </button>
+         </td>
          </tr>
         <% end%>
       </tbody>

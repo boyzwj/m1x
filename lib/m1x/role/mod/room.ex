@@ -1,5 +1,5 @@
 defmodule Role.Mod.Room do
-  defstruct room_id: 0, map_id: 0, status: 0
+  defstruct role_id: nil,room_id: 0, map_id: 0, status: 0
   use Role.Mod
 
   @doc """

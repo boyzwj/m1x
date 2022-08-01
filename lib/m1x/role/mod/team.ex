@@ -1,4 +1,4 @@
 defmodule Role.Mod.Team do
-  defstruct team_id: 0
+  defstruct role_id: nil,team_id: 0
   use Role.Mod
 end
