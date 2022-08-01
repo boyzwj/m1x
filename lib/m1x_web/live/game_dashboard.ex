@@ -23,14 +23,41 @@ defmodule M1xWeb.GameDashboard do
     {:ok, socket}
   end
 
-  def handle_event("on", _params, socket) do
-    socket = assign(socket, :online_num, 100)
+  def handle_event("restart", _params, socket) do
+    socket =
+      socket
+      |> put_flash(:info, "Restarting")
+
+    :init.restart()
     {:noreply, socket}
   end
 
-  def handle_event("off", _params, socket) do
-    online_num = :pg.get_members(Role.Svr) |> length()
-    socket = assign(socket, :online_num, online_num)
+  def handle_event("cleardb", _params, socket) do
+    Redis.clearall()
+    :init.restart()
+
+    socket =
+      socket
+      |> put_flash(:info, "Database cleared !! Restarting...")
+
+    {:noreply, socket}
+  end
+
+  def handle_event("clearlog", _params, socket) do
+    logdir =
+      Application.get_env(:logger, :error_log)[:path]
+      |> Path.dirname()
+
+    for filename <- File.ls!(logdir) do
+      File.rm!("#{logdir}/#{filename}")
+    end
+
+    :init.restart()
+
+    socket =
+      socket
+      |> put_flash(:info, "Logfile cleared !! Restarting...")
+
     {:noreply, socket}
   end
 

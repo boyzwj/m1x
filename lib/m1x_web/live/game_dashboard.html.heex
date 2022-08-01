@@ -2,10 +2,7 @@
 <div>
 
 
-  <div class="flex space-x-4 bg-yellow-300 p-2 m-2">
-    <button class ="btn" phx-click="restart">Restart</button> 
-    <button class ="btn" phx-click="cleardb">ClearDB</button>
- </div>
+
 
 
     <div class="flex items-center bg-blue-300 rounded-lg m-2 px-5">
@@ -38,7 +35,11 @@
 
 
     
-
+  <div class="flex space-x-4 bg-yellow-300 p-2 m-2">
+    <button class ="btn" phx-click="restart">Restart</button> 
+    <button class ="btn" phx-click="cleardb">ClearDB</button>
+    <button class ="btn" phx-click="clearlog">ClearLogfile</button>
+ </div>
   
   <div class="flex space-x-4 bg-gray-900 p-2 m-2">
     <%= for log_file <- @log_files do %>
