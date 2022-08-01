@@ -17,6 +17,7 @@ defmodule M1xWeb.Router do
   scope "/", M1xWeb do
     pipe_through :browser
     live "/", GameDashboard
+    # get "/", PageController, :index
     get "/get_pbclass", PageController, :get_pbclass
     get "/get_log", PageController, :get_log
   end

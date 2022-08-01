@@ -7,7 +7,6 @@ defmodule M1xWeb.GameDashboard do
       :timer.send_interval(2000, self(), :tick)
     end
 
-
     socket =
       socket
       |> assign_player_infos()
@@ -55,7 +54,7 @@ defmodule M1xWeb.GameDashboard do
   end
 
   def handle_event("kick", params, socket) do
-    IO.inspect({:kick,params})
+    IO.inspect({:kick, params})
     {:noreply, socket}
   end
 
@@ -73,12 +72,12 @@ defmodule M1xWeb.GameDashboard do
       Application.get_env(:logger, :error_log)[:path]
       |> Path.dirname()
       |> File.ls!()
+      |> Enum.filter(&String.ends_with?(&1, ".MD"))
       |> Enum.sort()
 
     socket
     |> assign(:log_files, log_files)
   end
-
 
   defp assign_player_infos(socket) do
     player_infos =
@@ -87,6 +86,7 @@ defmodule M1xWeb.GameDashboard do
         |> Map.from_struct()
         |> Map.put(:pid, "#{inspect(pid)}")
       end
-    socket|> assign(:player_infos, player_infos)
+
+    socket |> assign(:player_infos, player_infos)
   end
 end

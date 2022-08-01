@@ -4,24 +4,10 @@
 
 /* This file is for your main application CSS */
 /* @import "./phoenix.css"; */
-@import "./live_view.css";
+/* @import "./live_view.css"; */
 
 /* Alerts and form errors used by phx.new */
-.card {
-  @apply p-4 bg-blue-200 text-blue-800 rounded-lg;
 
-  & .title {
-    @apply text-2xl tracking-tight font-bold;
-  }
-
-  & .description {
-    @apply pt-4 text-lg font-medium;
-
-    & a {
-      @apply underline text-blue-600;
-    }
-  }
-}
 
 .btn {
   @apply font-bold bg-indigo-100 px-4 py-2 m-2 rounded-lg text-blue-600;
