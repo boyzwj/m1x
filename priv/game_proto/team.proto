@@ -2,19 +2,21 @@ syntax = "proto3";
 package pbm.team;
 import "common.proto";
 
-message  Member{
-    uint64 role_id = 1;
-    uint32 position = 2;
+
+message BaseInfo{
+    uint64 team_id = 1;    //队伍ID
+    uint64 leader_id = 2;  //队长ID
+    map<uint32,uint64> members=3; //队伍成员
+    uint32 mode = 4;  //游戏模式
+    
 }
+
 
 message Info2S{
 }
 
 message Info2C{
-    uint64 team_id = 1;    //队伍ID
-    uint64 leader_id = 2;  //队长ID
-    repeated Member members=3; //队伍成员
-    uint32 mode = 4;  //游戏模式
+    BaseInfo info = 1;
 }
 
 message Create2S{
