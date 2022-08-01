@@ -9,14 +9,6 @@
 /* Alerts and form errors used by phx.new */
 
 
-.btn {
-  @apply font-bold bg-indigo-100 px-4 py-2 m-2 rounded-lg text-blue-600;
-}
-
-.downfile {
-  @apply bg-gray-100 px-4 py-1 m-2 rounded-lg text-gray-600 italic;
-}
-
 
 .alert {
   padding: 15px;

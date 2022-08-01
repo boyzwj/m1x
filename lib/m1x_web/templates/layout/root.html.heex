@@ -11,16 +11,12 @@
   </head>
   <body class ="bg-indigo-100">
     <header>
-      <nav class="top-0 left-0 right-0 z-30 bg-indigo-900 shadow">
-         <div class="container mx-auto px-6 py-3 md:flex md:justify-between md:items-center">
-         <div class="flex justify-between items-center">
-            <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
-              <button class = "btn"><%= link "System Dashboard", to: Routes.live_dashboard_path(@conn, :home) %></button>
+      <.container max_width="full" class= "p-4 bg-indigo-900">
+              <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
+              <.button to={ Routes.live_dashboard_path(@conn, :home)} link_type="a" color="secondary" label="System Dashboard" />
             <% end %>
-              <button class = "btn"><%= link "Download Pb", to: "/get_pbclass" %></button>
-          </div>
-          </div>
-        </nav>
+              <.button to= "/get_pbclass" link_type="a" color="secondary" label="Download Pb" />
+      </.container>
     </header>
       <%= @inner_content %>
       <footer class="bg-indigo-900 mt-auto py-3">

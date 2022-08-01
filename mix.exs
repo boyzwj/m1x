@@ -73,7 +73,8 @@ defmodule M1x.MixProject do
       {:manifold, "~> 1.4"},
       {:earmark, "~> 1.4"},
       {:memoize, "~> 1.4"},
-      {:pockets, "~> 1.2"}
+      {:pockets, "~> 1.2"},
+      {:petal_components, "~> 0.17.6"}
     ]
   end
 
