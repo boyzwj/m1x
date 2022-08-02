@@ -10,6 +10,7 @@ defmodule M1xWeb.GameDashboard do
     socket =
       socket
       |> assign_log_files()
+      |> assign_online_num()
 
     {:ok, socket}
   end
@@ -56,6 +57,7 @@ defmodule M1xWeb.GameDashboard do
     socket =
       socket
       |> assign_log_files()
+      |> assign_online_num()
 
     {:noreply, socket}
   end
@@ -70,5 +72,9 @@ defmodule M1xWeb.GameDashboard do
 
     socket
     |> assign(:log_files, log_files)
+  end
+
+  defp assign_online_num(socket) do
+    socket |> assign(:online_num, length(:pg.get_members(Role.Svr)))
   end
 end

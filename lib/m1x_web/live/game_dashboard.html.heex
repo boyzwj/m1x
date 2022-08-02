@@ -2,10 +2,10 @@
   
   <.container max_width="full" class ="flex items-center bg-gray-100 p-5">
     <.h2>Onlines:</.h2>
-    <%= if length(@player_infos)> 0 do %>
-    <.p class="px-5 text-5xl text-red-500"><a href="/roles"><%= length(@player_infos) %></a></.p>
+    <%= if @online_num> 0 do %>
+    <.p class="px-5 text-5xl text-red-500"><a href="/roles"><%= @online_num %></a></.p>
     <% else %>
-    <.p class="px-5 text-5xl text-red-500"><%= length(@player_infos) %></.p>
+    <.p class="px-5 text-5xl text-red-500"><%= @online_num %></.p>
     <% end %>
   </.container>
 
