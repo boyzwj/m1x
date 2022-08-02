@@ -7,6 +7,9 @@ REMOTE_PASS="1"
 
 echo "update server to $REMOTE_HOST"
 
+rm -rf ./priv/game_proto/*.proto 
+cp proto/*.proto ./priv/game_proto/
+
 MIX_ENV=prod mix assets.deploy
 MIX_ENV=prod mix release --overwrite
 

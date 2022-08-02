@@ -110,7 +110,7 @@ config :m1x,
   ]
 
 config :exsync,
-  addition_dirs: ["/proto", "/priv/proto"],
+  addition_dirs: ["/proto", "/priv/game_proto"],
   extensions: [".ex", ".proto"]
 
 # reload_callback: {PBClass, :create, []}
