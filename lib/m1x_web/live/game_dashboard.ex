@@ -9,8 +9,8 @@ defmodule M1xWeb.GameDashboard do
 
     socket =
       socket
-      |> assign_player_infos()
       |> assign_log_files()
+      |> assign_online_num()
 
     {:ok, socket}
   end
@@ -53,16 +53,11 @@ defmodule M1xWeb.GameDashboard do
     {:noreply, socket}
   end
 
-  def handle_event("kick", params, socket) do
-    IO.inspect({:kick, params})
-    {:noreply, socket}
-  end
-
   def handle_info(:tick, socket) do
     socket =
       socket
-      |> assign_player_infos()
       |> assign_log_files()
+      |> assign_online_num()
 
     {:noreply, socket}
   end
@@ -79,14 +74,7 @@ defmodule M1xWeb.GameDashboard do
     |> assign(:log_files, log_files)
   end
 
-  defp assign_player_infos(socket) do
-    player_infos =
-      for pid <- :pg.get_members(Role.Svr) do
-        Role.Svr.get_data(pid, Role.Mod.Role)
-        |> Map.from_struct()
-        |> Map.put(:pid, "#{inspect(pid)}")
-      end
-
-    socket |> assign(:player_infos, player_infos)
+  defp assign_online_num(socket) do
+    socket |> assign(:online_num, length(:pg.get_members(Role.Svr)))
   end
 end

@@ -2,39 +2,12 @@
   
   <.container max_width="full" class ="flex items-center bg-gray-100 p-5">
     <.h2>Onlines:</.h2>
-    <.p class="px-5 text-5xl text-red-500"> <%= length(@player_infos) %></.p>
+    <%= if @online_num> 0 do %>
+    <.p class="px-5 text-5xl text-red-500"><a href="/roles"><%= @online_num %></a></.p>
+    <% else %>
+    <.p class="px-5 text-5xl text-red-500"><%= @online_num %></.p>
+    <% end %>
   </.container>
-
-<%= if length(@player_infos)> 0 do%>
-<.container max_width="full" class ="bg-gray-300 py-10">
- <.table>
-   <thead>
-     <.tr>
-       <.th>RoleID</.th>
-       <.th>PID</.th>
-       <.th>账号</.th>
-       <.th>名称</.th>
-       <.th>头像</.th>
-       <.th>等级</.th>
-       <.th>段位</.th>
-       <.th>#</.th>
-     </.tr>
-   </thead>
-   <tbody>
-    <%= for info <- @player_infos do %>
-    <.tr><.td><%= info.role_id %></.td>
-    <.td><%= info.pid %></.td>
-    <.td><%= info.account %></.td>
-    <.td><%= info.role_name %></.td>
-    <.td><%= info.head_id %></.td>
-    <.td><%= info.level %></.td>        
-    <.td><%= info.rank %></.td>
-    <.td> <.button color="primary" class="bg-blue-500"  label="踢掉" phx-click="kick"  value={info.role_id} /> </.td></.tr>          
-    <% end%>
-   </tbody>
- </.table>
- </.container>
-<% end %>
 
 
 
@@ -46,12 +19,12 @@
 
   <.container max_width="full" class ="bg-gray-300 p-5">
   <%= for log_file <- @log_files do %>
-  <%= if String.starts_with?(log_file,"info") do %>
+    <%= if String.starts_with?(log_file,"info") do %>
 
-  <.button to= {"/get_log?f="<>log_file} link_type="a" color="gray" label={log_file} />  
-  <% else%>
-  <.button to= {"/get_log?f="<>log_file} link_type="a" color="danger" label={log_file} />  
-  <% end %>
+    <.button to= {"/get_log?f="<>log_file} link_type="a" color="gray" label={log_file} />  
+    <% else%>
+    <.button to= {"/get_log?f="<>log_file} link_type="a" color="danger" label={log_file} />  
+    <% end %>
   <% end %>
   </.container>
 </.container>
