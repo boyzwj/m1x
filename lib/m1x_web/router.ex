@@ -20,6 +20,7 @@ defmodule M1xWeb.Router do
     # get "/", PageController, :index
     get "/get_pbclass", PageController, :get_pbclass
     get "/get_log", PageController, :get_log
+    live "/roles", RolesLive
   end
 
   # Other scopes may use custom stacks.
