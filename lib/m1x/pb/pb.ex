@@ -4,11 +4,11 @@ defmodule PB do
 
   use Protox,
     files:
-    File.ls!("#{:code.priv_dir(:m1x)}/game_proto/")
-    |> Enum.filter(&String.ends_with?(&1, ".proto"))
-    |> Enum.map(&"#{:code.priv_dir(:m1x)}/game_proto/#{&1}")
+      File.ls!("./proto")
+      |> Enum.filter(&String.ends_with?(&1, ".proto"))
+      |> Enum.map(&"./proto/#{&1}")
 
-    proto_ids = Tool.Pbid.proto_ids("#{:code.priv_dir(:m1x)}/game_proto/")
+  proto_ids = Tool.Pbid.proto_ids("./proto/")
 
   pkgs =
     for %{id: _id, proto: proto} <- proto_ids, m = Module.concat([proto]), into: MapSet.new() do

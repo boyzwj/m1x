@@ -22,11 +22,11 @@ defmodule Dc.Client do
     GenServer.cast(pid, {:send2dsa, data})
   end
 
-  @impl true
   def start_link(ref, _socket, transport, opts) do
     start_link(ref, transport, opts)
   end
 
+  @impl true
   def start_link(ref, transport, opts) do
     {:ok, :proc_lib.spawn_link(__MODULE__, :init, [{ref, transport, opts}])}
   end
