@@ -1,4 +1,4 @@
 #!/bin/sh
-sudo svn up ../pb
+sudo svn up proto
 rm -rf ./priv/game_proto/*.proto 
-cp ../pb/*.proto ./priv/game_proto/
+cp  proto/*.proto ./priv/game_proto/
