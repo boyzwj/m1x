@@ -1,8 +1,19 @@
 defmodule Team.Manager do
   use GenServer
   use Common
-
   @loop_interval 1000
+
+  def call(msg) do
+    :pg.get_local_members(__MODULE__)
+    |> Util.rand_list()
+    |> GenServer.call(msg)
+  end
+
+  def cast(msg) do
+    :pg.get_members(__MODULE__)
+    |> Enum.each(&GenServer.cast(&1, msg))
+  end
+
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
@@ -34,7 +45,7 @@ defmodule Team.Manager do
     {:noreply, state}
   end
 
-  def handle_info(msg, %Dc{} = state) do
+  def handle_info(msg, state) do
     Logger.warn("unhandle info : #{msg}")
     {:noreply, state}
   end

@@ -23,9 +23,15 @@ message Create2S{
     uint32 mode = 1; //游戏模式
 }
 
+
 message Create2C{
     uint64 team_id = 1; //队伍ID
     uint32 mode = 2;  //游戏模式
+}
+
+
+message ChangeMode2S{
+    uint32 mode = 1;
 }
 
 
@@ -67,4 +73,20 @@ message Exit2C{
 
 //开始匹配
 message BeginMatch2S{
+}
+
+
+//坑位状态
+message PositionInfo{
+    uint64 role_id = 1;
+    uint32 ready_state=2; //装备状态 (0未准备 | 1 准备)
+ 
+}
+
+message ReadyMatch2C{
+    map<int32,PositionInfo>  infos   = 1;
+}
+
+message ReadyMatch2S{
+    uint32 reply = 1; //邀请回复（0拒绝 | 1同意）
 }

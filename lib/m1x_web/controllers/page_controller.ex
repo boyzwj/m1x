@@ -7,7 +7,7 @@ defmodule M1xWeb.PageController do
 
   def get_pbclass(conn, _params) do
     cs_data =
-      Tool.Pbid.proto_ids("#{:code.priv_dir(:m1x)}/dc_proto/")
+      Tool.Pbid.proto_ids("#{:code.priv_dir(:m1x)}/game_proto/")
       |> PBClass.content()
 
     conn

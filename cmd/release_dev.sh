@@ -17,7 +17,7 @@ echo 'upload to remote ....'
 sudo rsync -rltDvz --password-file=/etc/rsyncd.passwd _build/prod/rel/ $REMOTE_HOST::data
 echo '>>>>  upload finish  <<<<'
 echo 'begin restart server'
-sshpass -p "1" ssh $REMOTE_HOST "PHX_SERVER=true RELEASE_NODE=develop /release/m1x/bin/m1x restart"
+sshpass -p "1" ssh $REMOTE_HOST "sudo PHX_SERVER=true RELEASE_NODE=develop /release/m1x/bin/m1x restart"
 echo 'begin restart dsa'
-sshpass -p "1" ssh $REMOTE_HOST "RELEASE_NODE=dsa_1 DSA_PORT=20081 /release/m1x/bin/m1x restart"
+sshpass -p "1" ssh $REMOTE_HOST "sudo RELEASE_NODE=dsa_1 DSA_PORT=20081 /release/m1x/bin/m1x restart"
 echo '>>>>  restart finish <<<<'
