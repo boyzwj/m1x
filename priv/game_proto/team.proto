@@ -7,7 +7,8 @@ message BaseInfo{
     uint64 team_id = 1;    //队伍ID
     uint64 leader_id = 2;  //队长ID
     map<uint32,uint64> members=3; //队伍成员
-    uint32 mode = 4;  //游戏模式
+    uint32 mode = 4;  //游戏模式\
+    uint32 status = 5;  // 0空闲 1匹配中  2匹配成功 3战斗中
     
 }
 
@@ -73,6 +74,12 @@ message Exit2C{
 
 //开始匹配
 message BeginMatch2S{
+}
+
+
+//取消匹配
+message CancelBatch2S{
+
 }
 
 

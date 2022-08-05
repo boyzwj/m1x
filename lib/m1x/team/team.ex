@@ -1,0 +1,139 @@
+defmodule Team do
+  defstruct team_id: 0, leader_id: 0, mode: 0, members: %{}, status: 0, member_num: 0
+  use Common
+
+  @positions [0, 1, 2, 3, 4]
+
+  @status_idle 0
+  @status_matching 1
+  @status_matched 2
+  @status_battle 3
+
+  def init([team_id, leader_id, mode]) do
+    state =
+      %Team{team_id: team_id, leader_id: leader_id, mode: mode}
+      |> add_members(leader_id)
+
+    state
+    |> sync()
+  end
+
+  def add_members(~M{%Team member_num,members} = state, role_id) do
+    pos = find_free_pos(state)
+    members = members |> Map.put(pos, role_id)
+    add_role_id(role_id)
+    member_num = member_num + 1
+    ~M{state | member_num ,members}
+  end
+
+  def change_mode(~M{%Team leader_id} = state, [role_id, mode]) do
+    if role_id != leader_id do
+      throw("你不是队长")
+    end
+
+    ~M{state|mode}
+    |> sync()
+    |> ok()
+  end
+
+  def exit_team(~M{%Team members,member_num,leader_id} = state, [role_id]) do
+    if not :ordsets.is_element(role_id, role_ids()) do
+      state |> ok()
+    else
+      members =
+        for {k, v} <- members, v != role_id, into: %{} do
+          {k, v}
+        end
+
+      member_num = member_num - 1
+      del_role_id(role_id)
+      ~M{%Pbm.Team.Exit2C role_id} |> broad_cast()
+
+      leader_id =
+        if role_id == leader_id do
+          role_ids() |> Util.rand_list() || 0
+        else
+          leader_id
+        end
+
+      if member_num == 0 do
+        self() |> Process.send(:shutdown, [:nosuspend])
+      end
+
+      ~M{state| members,member_num,leader_id} |> sync() |> ok()
+    end
+  end
+
+  def begin_match(~M{%Team leader_id,status} = state, [role_id]) do
+    if role_id != leader_id do
+      throw("你不是队长")
+    end
+
+    if status == @status_battle do
+      throw("队伍还在另一场战斗中")
+    end
+
+    if state in [@status_matched, @status_matching] do
+      throw("队伍已在匹配中")
+    end
+
+    state = ~M{state| status: @status_matching} |> sync()
+
+    {{:ok, status}, state}
+  end
+
+  defp find_free_pos(state, poses \\ @positions)
+  defp find_free_pos(_state, []), do: throw("没有空余的位置了")
+
+  defp find_free_pos(~M{%Team members} = state, [pos | t]) do
+    if members[pos] == nil do
+      pos
+    else
+      find_free_pos(state, t)
+    end
+  end
+
+  def set_dirty(dirty) do
+    Process.put({__MODULE__, :dirty}, dirty)
+  end
+
+  defp dirty?() do
+    Process.get({__MODULE__, :dirty}, false)
+  end
+
+  defp role_ids() do
+    Process.get({__MODULE__, :role_ids}, [])
+  end
+
+  defp set_role_ids(ids) do
+    Process.put({__MODULE__, :role_ids}, ids)
+  end
+
+  defp add_role_id(role_id) do
+    :ordsets.add_element(role_id, role_ids())
+    |> set_role_ids()
+  end
+
+  defp sync(~M{%Team team_id, leader_id,mode,members,status} = state) do
+    info = ~M{%Pbm.Team.BaseInfo  team_id,leader_id,mode,members,status}
+    ~M{%Pbm.Team.Info2C info} |> broad_cast()
+    state
+  end
+
+  defp del_role_id(role_id) do
+    :ordsets.del_element(role_id, role_ids())
+    |> set_role_ids()
+  end
+
+  def broad_cast(state, msg) do
+    broad_cast(msg)
+    state |> ok()
+  end
+
+  defp broad_cast(msg) do
+    role_ids()
+    |> Enum.each(&Role.Misc.send_to(msg, &1))
+  end
+
+  defp ok(state), do: {:ok, state}
+end
