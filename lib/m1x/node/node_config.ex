@@ -36,6 +36,10 @@ defmodule NodeConfig do
           members: :auto
         ]
       },
+      {Horde.Registry, [name: Matrix.RankRegistry, keys: :unique, members: :auto]},
+      {Horde.DynamicSupervisor,
+       [name: Matrix.RankSupervisor, strategy: :one_for_one, members: :auto]},
+      {Rank.Sup, []},
       {Role.Sup, []},
       {Redis.Manager, []},
       {Lobby.Sup, []},
