@@ -1,4 +1,5 @@
 defmodule Authorize do
+  use Common
   @min_len 4
   @max_len 32
 
@@ -13,11 +14,11 @@ defmodule Authorize do
 
   def do_authorize(token) do
     if String.length(token) < @min_len do
-      throw("token长度太短")
+      throw("登录token长度太短")
     end
 
     if String.length(token) > @max_len do
-      throw("token长度太长")
+      throw("登录token长度太长")
     end
 
     data = Redis.get("account:#{token}")

@@ -2,11 +2,11 @@
 
 ## 基础数据包结构
 
-### 第一层编码  
+### 第一层编码
 
     [len :: 协议长度 :: 16-little , body :: 协议内容 :: binary_size(len)]
 
-### 第二层编码  
+### 第二层编码
 
     [proto_type :: 协议类型::8, body::协议内容 ]
 
@@ -18,7 +18,7 @@
 * 每个会话存在登陆验证前，和登录验证后 两个状态
 * 不同登录状态只会接受特定的协议类型
 
-----
+---
 
 #### 1.登录验证协议
 
@@ -30,8 +30,16 @@ data = RC4_ENC([token::登录token::binary, gamekey::约定密钥::binary])
 
 * S2C
 
+登录成功
+
 ```
-data = RC4_ENC([role_id::玩家ID::64-little,  session_id::会话TOKEN::binary_size(36)] , gamekey::约定密钥::binary)
+data = RC4_ENC([1::8, role_id::玩家ID::64-little,  session_id::会话TOKEN::binary_size(36)] , gamekey::约定密钥::binary)
+```
+
+登录失败
+
+```
+data = RC4_ENC([0::8, error_id::32-little, error_msg::binary] , gamekey::约定密钥::binary)
 ```
 
 #### 2.心跳协议
@@ -56,13 +64,13 @@ data = [client_time::时间戳::32-little, server_time::时间戳::32-little]
 data = RC4_ENC([client_last_recv_index::客户最后收到的PB协议编号::32-little,role_id::玩家角色ID::64-little,session_id::会话ID::binary_size(36)],game_key::约定密钥)
 ```
 
-* S2C 重连成功  
+* S2C 重连成功
 
 ```
 data = [1::byte , last_recv_index::服务端最后接收的PB协议编号::32-little]
 ```
 
-* S2C 重连失败  
+* S2C 重连失败
 
 ```
 data = [0::byte]
@@ -73,14 +81,13 @@ data = [0::byte]
 ***小数据包（byte_size <256）采用RC4加密***
 
 * 协议包加密采用RC4算法, crypto_key 的生成法则是    MD5([session_id ,  role_id  ,  gamekey])
-
-* C2S  
+* C2S
 
 ```
 data =  RC4_ENC([index::自增ID::32-little,proto_id::协议号::16-little, pb_body::binary] , crypto_key)
 ```
 
-* S2C  
+* S2C
 
 ```
 data =  RC4_ENC([index::自增ID::32-little,proto_id::协议号::16-little, pb_body::binary] , crypto_key)
@@ -90,13 +97,13 @@ data =  RC4_ENC([index::自增ID::32-little,proto_id::协议号::16-little, pb_b
 
 ***大数据包（byte_size>=256）采用LZ4压缩,由于压缩后不再是明文，不需要再次RC4加密***
 
-* C2S  
+* C2S
 
 ```
 data =  LZ4.Compress([index::自增ID::32-little,proto_id::协议号::16-little, pb_body::binary])
 ```
 
-* S2C  
+* S2C
 
 ```
 data =  LZ4.Compress([index::自增ID::32-little,proto_id::协议号::16-little, pb_body::binary])
