@@ -89,7 +89,7 @@ defmodule Rank do
             Map.put(state, :indexs, indexs)
             |> Map.put(:is_dirty, true)
 
-          # Memoize.invalidate(__MODULE__, :slice)
+          Memoize.invalidate(__MODULE__, :slice)
           {:noreply, state}
         else
           {:noreply, state}
@@ -118,7 +118,7 @@ defmodule Rank do
             Map.put(state, :indexs, indexs)
             |> Map.put(:is_dirty, true)
 
-          # Memoize.invalidate(__MODULE__, :slice)
+          Memoize.invalidate(__MODULE__, :slice)
           {:reply, index, state}
         else
           {:reply, SortedSet.find_index(set, {old_score, id}), state}
