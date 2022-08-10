@@ -61,7 +61,7 @@ defmodule Role.Mod do
 
           error ->
             Logger.warn(
-              "handle msg:#{inspect(msg)} has illigal return: #{inspect(error)}, expect end with {:ok, newstate}, :ok , :ignore"
+              "handle msg:#{inspect(msg)} has illegal return: #{inspect(error)}, expect end with {:ok, newstate}, :ok , :ignore"
             )
         end
       end
