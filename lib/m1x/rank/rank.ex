@@ -89,7 +89,12 @@ defmodule Rank do
             Map.put(state, :indexs, indexs)
             |> Map.put(:is_dirty, true)
 
-          Memoize.invalidate(__MODULE__, :slice)
+          if @is_global do
+            Rank.GlobalManager.clear_cache(__MODULE__, :slice, :_)
+          else
+            Memoize.invalidate(__MODULE__, :slice)
+          end
+
           {:noreply, state}
         else
           {:noreply, state}
@@ -118,7 +123,12 @@ defmodule Rank do
             Map.put(state, :indexs, indexs)
             |> Map.put(:is_dirty, true)
 
-          Memoize.invalidate(__MODULE__, :slice)
+          if @is_global do
+            Rank.GlobalManager.clear_cache(__MODULE__, :slice, :_)
+          else
+            Memoize.invalidate(__MODULE__, :slice)
+          end
+
           {:reply, index, state}
         else
           {:reply, SortedSet.find_index(set, {old_score, id}), state}
@@ -200,7 +210,6 @@ defmodule Rank do
 
       defp load() do
         try do
-          IO.inspect(%{key: key()})
           temp = Redis.get(key())
 
           if is_nil(temp) do

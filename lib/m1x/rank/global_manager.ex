@@ -2,6 +2,11 @@ defmodule Rank.GlobalManager do
   use GenServer
   use Common
 
+  def clear_cache(mod, fun, args) do
+    :pg.get_members(__MODULE__)
+    |> Enum.each(&GenServer.cast(&1, {:clear_cache, mod, fun, args}))
+  end
+
   def start_worker(rank_name, args) do
     GenServer.call(__MODULE__, {:start_worker, [{rank_name, args}]})
   end
@@ -15,6 +20,7 @@ defmodule Rank.GlobalManager do
     Logger.debug("Rank global manager start")
     interval = Util.rand(1, 100)
     Process.send_after(self(), {:start_worker, args}, interval)
+    :pg.join(__MODULE__, self())
     {:ok, {}}
   end
 
@@ -24,6 +30,12 @@ defmodule Rank.GlobalManager do
       Horde.DynamicSupervisor.start_child(Matrix.RankSupervisor, {rank_name, args})
     end
 
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:clear_cache, mod, fun, args}, state) do
+    Memoize.invalidate(mod, fun, args)
     {:noreply, state}
   end
 end
