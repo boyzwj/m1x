@@ -79,7 +79,6 @@ defmodule Team.Svr do
   def handle_call({func, args}, _From, state) do
     try do
       {reply, state} = apply(Team, func, [state, args])
-      # Team.set_dirty(true)
       {:reply, reply, state}
     catch
       error ->
@@ -89,8 +88,7 @@ defmodule Team.Svr do
 
   @impl true
   def terminate(_reason, ~M{team_id} = _state) do
-    :ets.delete(Team, team_id)
-    # Team.Manager.recycle_team(team_id)
+    Team.Manager.end_team(team_id)
     :ok
   end
 end

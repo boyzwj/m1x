@@ -156,17 +156,26 @@ defmodule GateWay.Session do
       {:ok, _pid} = Role.Interface.start_role_svr(role_id)
       status = @status_authorized
       crypto_key = Util.md5(session_id <> <<role_id::64-little>> <> @base_key)
-      data = <<role_id::64-little, session_id::binary>> |> Util.enc_rc4(@base_key)
+      data = <<1, role_id::64-little, session_id::binary>> |> Util.enc_rc4(@base_key)
       packet = <<@proto_authorize, data::binary>>
-      # Logger.debug("#{role_id} reg sid")
       :yes = :global.re_register_name(name(role_id), self())
       Redis.set("session:#{session_id}", role_id)
       Process.send(self(), {:send_packet, packet}, [:nosuspend])
       :pg.join(__MODULE__, self())
       ~M{state| status,role_id,crypto_key}
     else
-      _ ->
-        Logger.error("authorize error")
+      {:error, error} when is_binary(error) ->
+        data = <<0, 0::32-little, error::binary>> |> Util.enc_rc4(@base_key)
+        packet = <<@proto_authorize, data::binary>>
+        Process.send(self(), {:send_packet, packet}, [:nosuspend])
+        Logger.error("authorize error #{error}")
+        state
+
+      {:error, error} when is_integer(error) ->
+        data = <<0, error::32-little>> |> Util.enc_rc4(@base_key)
+        packet = <<@proto_authorize, data::binary>>
+        Process.send(self(), {:send_packet, packet}, [:nosuspend])
+        Logger.error("authorize error with code:  #{error}")
         state
     end
   end

@@ -11,6 +11,11 @@ defmodule Team.Manager do
     GenServer.call(__MODULE__, {func, args})
   end
 
+  def end_team(args) do
+    {func, _} = __ENV__.function
+    GenServer.cast(__MODULE__, {func, args})
+  end
+
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
@@ -43,6 +48,17 @@ defmodule Team.Manager do
   end
 
   @impl true
+  def handle_cast({func, arg}, state) do
+    try do
+      {:ok, state} = apply(__MODULE__, func, [state, arg])
+      {:noreply, state}
+    catch
+      error ->
+        Logger.error("handle cast error : #{inspect(error)}")
+        {:noreply, state}
+    end
+  end
+
   def handle_cast(msg, state) do
     Logger.warn("unhandle cast : #{inspect(msg)}")
     {:noreply, state}
@@ -79,6 +95,10 @@ defmodule Team.Manager do
         recycle_team_id(team_id)
         throw("房间创建失败")
     end
+  end
+
+  def end_team(state, team_id) do
+    recycle_team_id(state, team_id)
   end
 
   def recycle_team_id(state, team_id) do

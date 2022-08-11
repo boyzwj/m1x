@@ -64,7 +64,7 @@ defmodule Team do
     end
   end
 
-  def begin_match(~M{%Team leader_id,status} = state, [role_id]) do
+  def begin_match(~M{%Team team_id,leader_id,status,mode,member_num} = state, [role_id]) do
     if role_id != leader_id do
       throw("你不是队长")
     end
@@ -77,8 +77,9 @@ defmodule Team do
       throw("队伍已在匹配中")
     end
 
+    avg_elo = get_avg_elo(state)
+    Team.Matcher.Svr.join(mode, [team_id, member_num, avg_elo])
     state = ~M{state| status: @status_matching} |> sync()
-
     {{:ok, status}, state}
   end
 
@@ -136,4 +137,13 @@ defmodule Team do
   end
 
   defp ok(state), do: {:ok, state}
+
+  defp get_avg_elo(~M{%Team member_num}) do
+    role_ids()
+    |> Enum.reduce(fn id, acc ->
+      ~M{elo} = Role.Mod.Role.load(id)
+      elo + acc
+    end)
+    |> div(member_num)
+  end
 end
