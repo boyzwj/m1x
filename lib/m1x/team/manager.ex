@@ -91,9 +91,10 @@ defmodule Team.Manager do
     with {:ok, _pid} <- DynamicSupervisor.start_child(DynamicTeam.Sup, {Team.Svr, args}) do
       {{:ok, team_id}, state}
     else
-      _ ->
+      error ->
+        Logger.error("create team process error : #{inspect(error)}")
         recycle_team_id(team_id)
-        throw("房间创建失败")
+        throw("队伍创建失败")
     end
   end
 
