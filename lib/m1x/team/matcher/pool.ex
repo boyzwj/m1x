@@ -11,6 +11,8 @@ defmodule Team.Matcher.Pool do
   alias Discord.SortedSet
   alias Team.Matcher.Pool
   alias Team.Matcher.Group
+  alias Team.Matcher.Team, as: T
+
   @type_single 0
   @type_team 1
   @type_mix 2
