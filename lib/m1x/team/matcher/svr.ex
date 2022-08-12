@@ -18,7 +18,7 @@ defmodule Team.Matcher.Svr do
 
   def start_link(mode) do
     Logger.debug("start Team matcher, Mode is  #{mode}")
-    GenServer.start_link(__MODULE__, [], name: via(mode))
+    GenServer.start_link(__MODULE__, [mode], name: via(mode))
   end
 
   @impl true
@@ -49,8 +49,8 @@ defmodule Team.Matcher.Svr do
   end
 
   @impl true
-  def init(_args) do
-    state = Team.Matcher.init()
+  def init(args) do
+    state = Team.Matcher.init(args)
     {:ok, state}
   end
 

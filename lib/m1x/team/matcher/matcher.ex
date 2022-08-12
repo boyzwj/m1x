@@ -1,18 +1,19 @@
 defmodule Team.Matcher do
-  defstruct match_queue: nil, pools: nil, now: 0
+  defstruct teams: nil, match_queue: nil, pools: nil, now: 0
   use Common
   alias Discord.SortedSet
+  alias Team.Matcher.Pool
   @max_team_member_count 5
   @loop_interval 1000
 
-  def init() do
+  def init(_mode_args) do
     pools = for num <- 1..@max_team_member_count, into: %{}, do: {num, %{}}
     Process.send_after(self(), :loop, @loop_interval)
     match_queue = SortedSet.new(5000)
-    %Team.Matcher{pools: pools, now: Util.unixtime(), match_queue: match_queue}
+    %Team.Matcher{pools: pools, now: Util.unixtime(), match_queue: match_queue, teams: %{}}
   end
 
-  def join(%__MODULE__{pools: pools, match_queue: match_queue, now: now} = state, [
+  def join(~M{%__MODULE__ pools, match_queue, now, teams} = state, [
         team_id,
         num,
         avg_elo
@@ -22,7 +23,17 @@ defmodule Team.Matcher do
     pool = Map.put(pool, team_id, {avg_elo, now})
     pools = Map.put(pools, num, pool)
     SortedSet.add(match_queue, {now, team_id})
-    ~M{state |pools} |> reply(:ok)
+    teams = Map.put(teams, team_id, {num, avg_elo, now})
+    ~M{state | pools,teams} |> reply(:ok)
+  end
+
+  def cancel_match(~M{%__MODULE__ pools, match_queue,teams} = state, [team_id]) do
+    with {_num, _elo, timestamp} <- teams[team_id] do
+      SortedSet.remove(match_queue, {timestamp, team_id})
+    else
+      _ ->
+        state |> reply(:ok)
+    end
   end
 
   def loop(state) do
