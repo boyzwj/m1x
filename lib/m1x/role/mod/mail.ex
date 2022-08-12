@@ -1,37 +1,61 @@
 defmodule Role.Mod.Mail do
-  defstruct role_id: nil, mails: []
+  defstruct role_id: nil, mails: [], last_gmail_id: 0
   use Role.Mod
-  alias Mail.Schema
-
   @fetch_interval 3
 
-  defp on_init(~M{%M mails} = state) do
+  # 从个人邮箱拉去个人邮件
+  # 通知新邮件给客户端
+  def on_receive_new_mail(~M{%M mails,role_id} = state, _) do
+    with new_mails <- Mail.Personal.fetch_all_mails(role_id),
+         {added_num, mails} <- add_undeal_mails(new_mails, mails, nil),
+         state <- ~M{state|mails} |> set_data() do
+      Mail.Personal.clear_mails(role_id)
+
+      mails
+      |> Enum.slice(0, added_num)
+      |> Enum.reverse()
+      |> broadcast_mails()
+
+      state
+    end
+  end
+
+  # 从全服邮箱拉取全服邮件
+  # 从个人邮箱拉去个人邮件
+  defp on_init(~M{%M mails,role_id,last_gmail_id} = state) do
     ~M{%Role.Mod.Role create_time} = Role.Mod.Role.get_data()
 
-    with true <- mails != [],
-         ~M{%Schema id: last_mail_id} <- hd(mails),
-         undeal_mails <- Mail.fetch_mails(last_mail_id),
-         true <- undeal_mails != [] or {:last_mail_id, last_mail_id},
-         mails <- add_undeal_mails(undeal_mails, mails, create_time) do
-      ~M{state|mails}
-    else
-      {:last_mail_id, last_mail_id} ->
-        set_last_mail_id(last_mail_id)
-        state
+    with global_mails <- Mail.Global.fetch_mails(last_gmail_id),
+         personal_mails <- Mail.Personal.fetch_all_mails(role_id),
+         undeal_mails <- (global_mails ++ personal_mails) |> Enum.sort(& &1.create_time),
+         {_added_num, mails} <- add_undeal_mails(undeal_mails, mails, create_time) do
+      Mail.Personal.clear_mails(role_id)
 
+      if global_mails != [] do
+        last_gmail_id = List.last(global_mails).id
+        ~M{state|mails,last_gmail_id}
+      else
+        ~M{state|mails}
+      end
+    else
       _ ->
-        set_last_mail_id(0)
         state
     end
   end
 
-  def secondloop(~M{%M role_id,mails} = state, now) do
+  def secondloop(~M{%M role_id,mails,last_gmail_id} = state, now) do
     with true <- rem(now, @fetch_interval) == rem(role_id, @fetch_interval),
-         undeal_mails when undeal_mails != [] <- Mail.fetch_mails(get_last_mail_id()),
-         mails <- add_undeal_mails(undeal_mails, mails, nil),
-         state <- ~M{state|mails} do
+         global_mails when global_mails != [] <- Mail.Global.fetch_mails(last_gmail_id),
+         {added_num, mails} <- add_undeal_mails(global_mails, mails, nil),
+         last_gmail_id <- List.last(global_mails).id,
+         state <- ~M{state|mails,last_gmail_id} do
       set_data(state)
-      broadcast_mails(undeal_mails)
+
+      mails
+      |> Enum.slice(0, added_num)
+      |> Enum.reverse()
+      |> broadcast_mails()
+
       state
     else
       _ ->
@@ -39,25 +63,27 @@ defmodule Role.Mod.Mail do
     end
   end
 
+  # undeal_mails order_by asc, mails order_by desc
   defp add_undeal_mails(undeal_mails, mails, role_create_time) do
-    mails =
+    %Mail{id: last_mail_id} = List.first(mails, %Mail{id: 0})
+
+    {new_last_mail_id, mails} =
       undeal_mails
-      |> Enum.reduce(mails, fn x, acc ->
-        if role_create_time == nil or x.create_time > role_create_time do
-          [x | acc]
+      |> Enum.reduce({last_mail_id, mails}, fn ~M{%Mail create_time} = x, {i, mails_acc} ->
+        if role_create_time == nil or create_time > role_create_time do
+          id = i + 1
+          {id, [~M{x|id} | mails_acc]}
         else
-          acc
+          {i, mails_acc}
         end
       end)
 
-    ~M{%Schema id: last_mail_id} = hd(mails)
-    set_last_mail_id(last_mail_id)
-    mails
+    {new_last_mail_id - last_mail_id, mails}
   end
 
   def h(~M{%M mails}, ~M{%Pbm.Mail.Info2S}) do
     mails =
-      for ~M{%Schema id,oid,args,body,attachs,create_time,expire_time,status} <- mails do
+      for ~M{%Mail id,oid,args,body,attachs,create_time,expire_time,status} <- mails do
         ~M{%Pbm.Mail.Mail2C id,oid,args,body,attachs,create_time,expire_time,status}
       end
 
@@ -68,16 +94,8 @@ defmodule Role.Mod.Mail do
   defp broadcast_mails([]), do: :ok
 
   defp broadcast_mails([mail | mails]) do
-    ~M{%Schema id,body,attachs,create_time,expire_time,status} = mail
+    ~M{%Mail id,body,attachs,create_time,expire_time,status} = mail
     ~M{%Pbm.Mail.Mail2C id,body,attachs,create_time,expire_time,status} |> sd()
     broadcast_mails(mails)
-  end
-
-  defp get_last_mail_id() do
-    Process.get({__MODULE__, :last_mail_id})
-  end
-
-  defp set_last_mail_id(last_mail_id) do
-    Process.put({__MODULE__, :last_mail_id}, last_mail_id)
   end
 end

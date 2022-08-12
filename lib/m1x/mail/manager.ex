@@ -22,7 +22,7 @@ defmodule Mail.Manager do
 
   @impl true
   def handle_info({:start_worker, _}, state) do
-    Horde.DynamicSupervisor.start_child(Matrix.MailSupervisor, {Mail, []})
+    Horde.DynamicSupervisor.start_child(Matrix.MailSupervisor, {Mail.Global, []})
     {:noreply, state}
   end
 

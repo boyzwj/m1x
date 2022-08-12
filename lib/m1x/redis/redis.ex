@@ -126,6 +126,22 @@ defmodule Redis do
     select_call("ZSCORE", [key, member])
   end
 
+  def lpush(key, element) do
+    select_call("LPUSH", [key, element])
+  end
+
+  def rpush(key, element) do
+    select_call("RPUSH", [key, element])
+  end
+
+  def lrange(key, start, stop) do
+    select_call("LRANGE", [key, start, stop])
+  end
+
+  def del(key) do
+    select_call("DEL", [key])
+  end
+
   def child_spec(worker_id) do
     # worker_id = Keyword.fetch!(opts, :worker_id)
 

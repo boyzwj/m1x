@@ -23,6 +23,25 @@ defmodule Role.Svr do
     :global.whereis_name(name(role_id))
   end
 
+  # 获取在线玩家pid
+  def role_pids(role_ids) do
+    Enum.reduce(role_ids, [], fn role_id, role_pids ->
+      role_pid = pid(role_id)
+
+      if is_pid(role_pid) do
+        [role_id | role_pids]
+      else
+        role_pids
+      end
+    end)
+  end
+
+  # 在角色进程执行模块回调函数
+  def manifold_do_callback_fun(role_ids, mod_fun, args \\ []) do
+    role_pids(role_ids)
+    |> Manifold.send({:callback_fun, mod_fun, args})
+  end
+
   def exit(role_id) do
     cast(role_id, :exit)
   end
@@ -112,6 +131,20 @@ defmodule Role.Svr do
       err ->
         Logger.warning("safe save data error: #{inspect(err)}, retry later..")
         Process.send_after(self(), :safe_stop, 1000)
+        {:noreply, state}
+    end
+  end
+
+  def handle_info({:callback_fun, mod_fun, args}, state) do
+    try do
+      Function.info(mod_fun)[:module].get_data() |> mod_fun.(args)
+      {:noreply, state}
+    rescue
+      err ->
+        Logger.warning(
+          "callback_fun error: #{inspect(err)},mod_fun: #{mod_fun}.(#{inspect(args)})"
+        )
+
         {:noreply, state}
     end
   end
