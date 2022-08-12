@@ -87,8 +87,24 @@ defmodule Team.Svr do
   end
 
   @impl true
-  def terminate(_reason, ~M{team_id} = _state) do
+  # def handle_info(:secondloop, state) do
+  #   state = Team.secondloop(state)
+  #   {:noreply, state}
+  # end
+
+  def handle_info(:shutdown, state) do
+    Logger.debug("team shutdown")
+    {:stop, :normal, state}
+  end
+
+  @impl true
+
+  def terminate(:normal, ~M{team_id} = _state) do
     Team.Manager.end_team(team_id)
+    :ok
+  end
+
+  def terminate(_reason, _state) do
     :ok
   end
 end

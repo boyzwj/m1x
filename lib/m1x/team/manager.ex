@@ -38,7 +38,7 @@ defmodule Team.Manager do
       {:reply, reply, state}
     catch
       error ->
-        {:reply, error, state}
+        {:reply, {:error, error}, state}
     end
   end
 

@@ -10,11 +10,8 @@ defmodule Team do
   @status_battle 3
 
   def init([team_id, leader_id, mode]) do
-    state =
-      %Team{team_id: team_id, leader_id: leader_id, mode: mode}
-      |> add_members(leader_id)
-
-    state
+    %Team{team_id: team_id, leader_id: leader_id, mode: mode, status: @status_idle}
+    |> add_members(leader_id)
     |> sync()
   end
 

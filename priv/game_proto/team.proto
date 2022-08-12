@@ -78,7 +78,7 @@ message BeginMatch2S{
 
 
 //取消匹配
-message CancelBatch2S{
+message CancelMatch2S{
 
 }
 

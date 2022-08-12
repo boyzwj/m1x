@@ -1,9 +1,9 @@
 defmodule Team.Matcher.Pool do
   defstruct id: 0,
+            base_id: 0,
             type: 0,
             sub_type: 0,
             range_id: 0,
-            elo_range: {1000, 1100},
             team_list: [],
             search_pool_ids: []
 
@@ -21,8 +21,18 @@ defmodule Team.Matcher.Pool do
   @sub_type_fuzzy_1 1
   @sub_type_fuzzy_2 2
 
-  def new(~M{id,type,sub_type,elo_range}) do
-    ~M{%Team.Matcher.Pool id, type,sub_type,elo_range}
+  def new(~M{base_id,type,sub_type}) do
+    id = make_id(base_id, type, sub_type)
+    ~M{%Pool id, base_id,type,sub_type}
+  end
+
+  def make_id(base_id, type, sub_type) do
+    base_id * 10000 + type * 100 + sub_type
+  end
+
+  def get_base_id_by_elo(elo_value) do
+    Data.MatchScore.query(&(&1.elo_max >= elo_value && &1.elo_min <= elo_value))
+    |> List.first()
   end
 
   def get_team_list(id) do
@@ -46,6 +56,7 @@ defmodule Team.Matcher.Pool do
 
   def set(~M{%Pool id} = state) do
     Process.put({__MODULE__, id}, state)
+    state
   end
 
   def get(id) do
