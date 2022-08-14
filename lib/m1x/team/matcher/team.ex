@@ -7,9 +7,17 @@ defmodule Team.Matcher.Team do
 
   @status_matched 1
 
-  def new(~M{team_id,member_num,avg_elo,match_time}) do
+  def new(~M{team_id,member_num,avg_elo,match_time,pool_id}) do
     status = @status_waiting
-    ~M{%__MODULE__ team_id, member_num,avg_elo, match_time,status}
+    ~M{%__MODULE__ team_id, member_num,avg_elo,pool_id, match_time,status}
+  end
+
+  def loop(~M{%T status} = state) when status == @status_matched do
+    state
+  end
+
+  def loop(~M{%T pool_id,match_time} = state) do
+    state
   end
 
   def get(team_id) do

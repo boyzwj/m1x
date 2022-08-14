@@ -11,7 +11,7 @@ defmodule Team.Matcher.Pool do
   alias Discord.SortedSet
   alias Team.Matcher.Pool
   alias Team.Matcher.Group
-  alias Team.Matcher.Team, as: T
+  alias Team.Matcher.Team, as: MTeam
 
   @type_single 0
   @type_team 1
@@ -23,7 +23,24 @@ defmodule Team.Matcher.Pool do
 
   def new(~M{base_id,type,sub_type}) do
     id = make_id(base_id, type, sub_type)
-    ~M{%Pool id, base_id,type,sub_type}
+
+    search_pool_ids =
+      cond do
+        sub_type == @sub_type_fuzzy_1 ->
+          [base_id - 1, base_id, base_id + 1]
+          |> Enum.filter(&(Data.MatchPool.get(&1) != nil))
+          |> Enum.map(&make_id(&1, type, sub_type))
+
+        sub_type == @sub_type_fuzzy_2 ->
+          [base_id - 2, base_id - 1, base_id, base_id + 1, base_id + 2]
+          |> Enum.filter(&(Data.MatchPool.get(&1) != nil))
+          |> Enum.map(&make_id(&1, type, sub_type))
+
+        true ->
+          [id]
+      end
+
+    ~M{%Pool id, base_id,type,sub_type,search_pool_ids}
   end
 
   def make_id(base_id, type, sub_type) do
@@ -44,7 +61,7 @@ defmodule Team.Matcher.Pool do
     end
   end
 
-  def scan(~M{%Pool type,team_list,search_pool_ids} = state) do
+  def scan(~M{%Pool type,search_pool_ids} = state) do
     search_pool_ids
     |> Enum.map(&get_team_list(&1))
     |> Enum.concat()
@@ -52,6 +69,8 @@ defmodule Team.Matcher.Pool do
     |> SortedSet.to_list()
     |> do_scan(type)
     |> check_start()
+
+    state
   end
 
   def set(~M{%Pool id} = state) do
@@ -63,8 +82,16 @@ defmodule Team.Matcher.Pool do
     Process.get({__MODULE__, id})
   end
 
-  def add_team(~M{%Pool id,team_list} = state, ~M{match_time} = team_info) do
-    team_list = [{match_time, id, team_info} | team_list]
+  def add_team(~M{%Pool id,team_list} = state, ~M{match_time,team_id}) do
+    team_list = [{match_time, id, team_id} | team_list]
+    ~M{state| team_list}
+  end
+
+  def remove_team(~M{%Pool team_list} = state, team_id) do
+    team_list =
+      team_list
+      |> Enum.filter(fn {_, _, t} -> t != team_id end)
+
     ~M{state| team_list}
   end
 
@@ -74,7 +101,8 @@ defmodule Team.Matcher.Pool do
     groups
   end
 
-  def do_scan([{_match_time, _id, team_info} | search_list], type, groups) do
+  def do_scan([{_match_time, _id, team_id} | search_list], type, groups) do
+    team_info = MTeam.get(team_id)
     groups = do_join_group(team_info, type, groups, [])
     do_scan(search_list, type, groups)
   end
@@ -96,7 +124,6 @@ defmodule Team.Matcher.Pool do
   end
 
   defp check_start(groups) do
-    groups
-    |> Enum.each(&Group.check_start(&1))
+    groups |> Enum.each(&Group.check_start(&1))
   end
 end
