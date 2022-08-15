@@ -6,9 +6,11 @@ defmodule Team.Sup do
   end
 
   @impl true
+
   def init(_opts) do
-    children = [
-      {Team.Matcher.Svr, 1},
+    Data.GameModeManage.ids()
+    |> Enum.map(&{Team.Matcher.Svr, &1})
+    |> Enum.concat([
       {Team.Manager, []},
       {DynamicSupervisor,
        [
@@ -16,8 +18,7 @@ defmodule Team.Sup do
          shutdown: 1000,
          strategy: :one_for_one
        ]}
-    ]
-
-    Supervisor.init(children, strategy: :one_for_one)
+    ])
+    |> Supervisor.init(strategy: :one_for_one)
   end
 end

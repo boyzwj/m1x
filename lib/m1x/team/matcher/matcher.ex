@@ -5,16 +5,12 @@ defmodule Team.Matcher do
   alias Team.Matcher.Pool
   alias Team.Matcher.Team, as: MTeam
   @max_team_member_count 5
-  @loop_interval 500
+  @loop_interval 1000
 
-  @type_single 0
-  @type_team 1
-  @type_mix 2
-  @type_warm 3
-
-  @sub_type_accurate 0
-  @sub_type_fuzzy_1 1
-  @sub_type_fuzzy_2 2
+  @type_single 1
+  @type_team 2
+  @type_mix 3
+  @type_warm 4
 
   def init(_mode_args) do
     Process.send_after(self(), :loop, @loop_interval)
@@ -25,52 +21,29 @@ defmodule Team.Matcher do
   def init_pool() do
     for base_id <- Data.MatchPool.ids(),
         type <- [@type_single, @type_team, @type_mix, @type_warm] do
-      cond do
-        type in [@type_mix, @type_warm] ->
-          Pool.new(~M{base_id, type, sub_type: 0})
-          |> Pool.set()
-          |> Map.get(:id)
-          |> (&[&1]).()
-
-        type in [@type_single, @type_team] ->
-          for sub_type <- [@sub_type_accurate, @sub_type_fuzzy_1, @sub_type_fuzzy_2] do
-            Pool.new(~M{base_id, type, sub_type})
-            |> Pool.set()
-            |> Map.get(:id)
-          end
-      end
+      Pool.new(~M{base_id, type})
+      |> Pool.set()
+      |> Map.get(:id)
     end
-    |> Enum.concat()
   end
 
   def join(~M{%__MODULE__  now, team_ids} = state, [
         team_id,
         member_num,
-        avg_elo
+        avg_elo,
+        warm
       ])
-      when member_num == 1 do
-    pool_id =
-      Pool.get_base_id_by_elo(avg_elo)
-      |> Pool.make_id(@type_single, @sub_type_accurate)
+      when member_num >= 1 and member_num <= @max_team_member_count do
+    pool_type =
+      cond do
+        warm == true -> @type_warm
+        member_num == 1 -> @type_single
+        true -> @type_team
+      end
 
-    team_info = MTeam.new(~M{team_id,member_num,avg_elo,pool_id,match_time: now})
-    Pool.get(pool_id) |> Pool.add_team(team_info) |> Pool.set()
-    MTeam.set(team_info)
-    team_ids = MapSet.put(team_ids, team_id)
-    ~M{state | team_ids} |> reply(:ok)
-  end
-
-  def join(~M{%__MODULE__  now, team_ids} = state, [
-        team_id,
-        member_num,
-        avg_elo
-      ])
-      when member_num < @max_team_member_count do
-    pool_id =
-      Pool.get_base_id_by_elo(avg_elo)
-      |> Pool.make_id(@type_team, @sub_type_accurate)
-
-    team_info = MTeam.new(~M{team_id,member_num,avg_elo,pool_id,match_time: now})
+    base_pool_id = Pool.get_base_id_by_elo(avg_elo)
+    pool_id = {pool_type, base_pool_id}
+    team_info = MTeam.new(~M{team_id,member_num,avg_elo,base_pool_id,pool_id,match_time: now})
     Pool.get(pool_id) |> Pool.add_team(team_info) |> Pool.set()
     MTeam.set(team_info)
     team_ids = MapSet.put(team_ids, team_id)
@@ -102,10 +75,10 @@ defmodule Team.Matcher do
     |> loop_pool()
   end
 
-  defp loop_team(~M{%Matcher team_ids} = state) do
+  defp loop_team(~M{%Matcher team_ids,now} = state) do
     for team_id <- team_ids do
       MTeam.get(team_id)
-      |> MTeam.loop()
+      |> MTeam.loop(now)
       |> MTeam.set()
     end
 
@@ -124,5 +97,19 @@ defmodule Team.Matcher do
 
   defp reply(state, reply) do
     {reply, state}
+  end
+
+  def test1() do
+    Team.Matcher.Svr.join(1001, [1, 2, 1200, false])
+    Team.Matcher.Svr.join(1001, [2, 3, 1300, false])
+    Team.Matcher.Svr.join(1001, [3, 2, 1300, false])
+    Team.Matcher.Svr.join(1001, [4, 3, 1200, false])
+  end
+
+  def test2() do
+    Team.Matcher.Svr.join(1002, [101, 1, 1600, true])
+    Team.Matcher.Svr.join(1002, [102, 2, 1650, true])
+    Team.Matcher.Svr.join(1002, [103, 1, 1650, true])
+    Team.Matcher.Svr.join(1002, [104, 1, 1600, true])
   end
 end
