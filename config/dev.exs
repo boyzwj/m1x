@@ -90,8 +90,10 @@ config :logger, :error_log,
   level: :error
 
 config :logger, :console,
-  format: "### [$date $time] $metadata[$level] \n  * $levelpad$message\n\n",
-  metadata: [:module, :function, :line],
+  # format: "### [$date $time] $metadata[$level] \n  * $levelpad$message\n\n",
+  # metadata: [:module, :function, :line],
+  format: {LoggerFormat, :format},
+  metadata: [:file, :line, :mfa],
   level: :debug
 
 config :m1x,

@@ -41,4 +41,22 @@ defmodule Role do
 
     Redis.hset_array(dbkey(), array)
   end
+
+  @bf_role_name "bloomfilter:rolename"
+
+  @doc """
+  判断名称是否全服唯一
+  """
+  @spec exists_name?(binary()) :: boolean()
+  def exists_name?(name) do
+    Redis.bf_exists?(@bf_role_name, name) == 1
+  end
+
+  @doc """
+  标记角色名称已被使用
+  """
+  @spec mark_name(binary()) :: boolean()
+  def mark_name(name) do
+    Redis.bf_add(@bf_role_name, name)
+  end
 end

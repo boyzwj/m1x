@@ -7,6 +7,7 @@ defmodule Role.Mod.Role do
             head_id: 1,
             avatar_id: 1,
             rank: 0,
+            create_time: 0,
             elo: 1000
 
   use Role.Mod

@@ -29,7 +29,15 @@ defmodule Authorize do
       role_id = GID.get_role_id()
       Redis.set("account:#{token}", role_id)
       dbkey = Role.Misc.dbkey(role_id)
-      Redis.hset(dbkey, Role.Mod.Role, %{role_id: role_id, account: token, role_name: token})
+      create_time = Util.unixtime()
+
+      Redis.hset(dbkey, Role.Mod.Role, %{
+        role_id: role_id,
+        account: token,
+        role_name: token,
+        create_time: create_time
+      })
+
       {:ok, role_id}
     end
   end

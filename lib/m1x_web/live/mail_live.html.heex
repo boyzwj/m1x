@@ -1,0 +1,71 @@
+<%= if @live_action == :modal do %>
+  <.modal max_width="md" title="发送邮件">
+
+        <%= f = form_for @changeset, "#",
+              phx_submit: "send_mail" ,phx_change: "validate"%>
+<.form_field
+  label = "邮件类型"
+  type="select"
+  options={["个人邮件（系统）": "1","个人邮件（自定义）": "2", "全服邮件（系统）": "3","全服邮件（自定义）": "4"]}
+  form={f}
+  field={:mail_type}
+  selected={@mail_type}
+/>
+
+<%= if @mail_type in  ["1","2"] do %>
+<.form_field
+  label = "角色id"
+  type="text_input"
+  form={f}
+  field={:role_id}
+/>
+<% end %>
+
+<%= if @mail_type in ["1","3"] do %>
+<.form_field
+  label = "邮件配置表id"
+  type="text_input"
+  form={f}
+  field={:cfg_id}
+/>
+<% end %>
+
+<%= if @mail_type in ["2","4"] do %>
+<.form_field
+  label = "邮件内容"
+  type="textarea"
+  form={f}
+  field={:body}
+/>
+
+
+<.form_field
+  label = "物品"
+  type="textarea"
+  form={f}
+  field={:attachs}
+/>
+
+<% end %>
+
+<.form_field
+  label = "邮件内容参数（‘，’分割）"
+  type="text_input"
+  form={f}
+  field={:args}
+/>
+
+<.form_field 
+  label = "过期时间" 
+  type="datetime_local_input"
+  form={f}
+  field={:expire_time} />
+
+<.container max_width="full" >
+    <.button color="primary" label="发送" />
+    <%# <.button label="close" phx-click={PetalComponents.Modal.hide_modal()} /> %>
+</.container>
+
+
+  </.modal>
+<% end %>

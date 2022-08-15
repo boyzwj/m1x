@@ -61,7 +61,7 @@ defmodule Role.Mod do
 
           error ->
             Logger.warn(
-              "handle msg:#{inspect(msg)} has illigal return: #{inspect(error)}, expect end with {:ok, newstate}, :ok , :ignore"
+              "handle msg:#{inspect(msg)} has illegal return: #{inspect(error)}, expect end with {:ok, newstate}, :ok , :ignore"
             )
         end
       end
@@ -107,9 +107,10 @@ defmodule Role.Mod do
       存档接口
       """
       def save() do
-        get_data() |> save() |> on_after_save()
+        get_data() |> on_before_save() |> save() |> on_after_save()
       end
 
+      defp on_before_save(data), do: data
       defp on_after_save(saved?), do: saved?
 
       defp save(nil), do: :ok
@@ -174,6 +175,7 @@ defmodule Role.Mod do
                      on_terminate: 1,
                      save: 1,
                      on_after_save: 1,
+                     on_before_save: 1,
                      code_change: 1
     end
   end
