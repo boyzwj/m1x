@@ -158,9 +158,13 @@ defmodule Lobby.Room.Svr do
   end
 
   @impl true
-  def terminate(_reason, ~M{room_id} = _state) do
+  def terminate(:normal, ~M{room_id} = _state) do
     :ets.delete(Room, room_id)
     Lobby.Svr.recycle_room(room_id)
+    :ok
+  end
+
+  def terminate(_reason, _state) do
     :ok
   end
 end
