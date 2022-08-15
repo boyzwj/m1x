@@ -11,9 +11,9 @@ defmodule Mail.Global do
 
   # 发送全服系统邮件
   @spec send_mail(neg_integer(), list(), neg_integer()) :: :ok
-  def send_mail(oid, args, expire_time) when oid > 0 do
+  def send_mail(cfg_id, args, expire_time) when cfg_id > 0 do
     # TODO need set body,attachs and expire_time
-    GenServer.call(via_tuple(), {:send_mail, ~M{%Mail oid,args,expire_time}})
+    GenServer.call(via_tuple(), {:send_mail, ~M{%Mail cfg_id,args,expire_time}})
   end
 
   # 发送全服自定义邮件

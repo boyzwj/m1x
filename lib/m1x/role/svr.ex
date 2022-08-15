@@ -29,7 +29,7 @@ defmodule Role.Svr do
       role_pid = pid(role_id)
 
       if is_pid(role_pid) do
-        [role_id | role_pids]
+        [role_pid | role_pids]
       else
         role_pids
       end
@@ -110,15 +110,16 @@ defmodule Role.Svr do
   end
 
   def handle_info(:secondloop, state) do
-    now = Util.unixtime()
-    hook(:secondloop, [now])
-    # Logger.debug("#{role_id()} do second loop #{now}")
-    Process.send_after(self(), :secondloop, @loop_interval)
+    now = Util.longunixtime()
+    now_sec = round(now / 1000)
+    interval = (now_sec + 1) * 1000 - now
+    Process.send_after(self(), :secondloop, interval)
+    hook(:secondloop, [now_sec])
 
     state =
       state
-      |> check_save(now)
-      |> check_down(now)
+      |> check_save(now_sec)
+      |> check_down(now_sec)
 
     {:noreply, state}
   end
@@ -137,12 +138,13 @@ defmodule Role.Svr do
 
   def handle_info({:callback_fun, mod_fun, args}, state) do
     try do
-      Function.info(mod_fun)[:module].get_data() |> mod_fun.(args)
+      mod = Function.info(mod_fun)[:module]
+      mod_fun.(mod.get_data(), args)
       {:noreply, state}
     rescue
       err ->
         Logger.warning(
-          "callback_fun error: #{inspect(err)},mod_fun: #{mod_fun}.(#{inspect(args)})"
+          "callback_fun error: #{inspect(err)},mod_fun: #{inspect(mod_fun)},args: (#{inspect(args)})"
         )
 
         {:noreply, state}

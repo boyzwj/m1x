@@ -6,6 +6,8 @@ defmodule Role.Mod.Mail do
   # 从个人邮箱拉去个人邮件
   # 通知新邮件给客户端
   def on_receive_new_mail(~M{%M mails,role_id} = state, _) do
+    IO.inspect("on_receive_new_mail")
+
     with new_mails <- Mail.Personal.fetch_all_mails(role_id),
          {added_num, mails} <- add_undeal_mails(new_mails, mails, nil),
          state <- ~M{state|mails} |> set_data() do
@@ -20,16 +22,27 @@ defmodule Role.Mod.Mail do
     end
   end
 
+  defp on_before_save(~M{%M mails} = state) do
+    mails = Enum.map(mails, &Map.from_struct/1)
+    ~M{state|mails}
+  end
+
   # 从全服邮箱拉取全服邮件
   # 从个人邮箱拉去个人邮件
   defp on_init(~M{%M mails,role_id,last_gmail_id} = state) do
     ~M{%Role.Mod.Role create_time} = Role.Mod.Role.get_data()
+    mails = Enum.map(mails, &Poison.decode!(&1, as: %Mail{}))
 
     with global_mails <- Mail.Global.fetch_mails(last_gmail_id),
          personal_mails <- Mail.Personal.fetch_all_mails(role_id),
-         undeal_mails <- (global_mails ++ personal_mails) |> Enum.sort(& &1.create_time),
+         IO.inspect(global_mails, label: "global_mails"),
+         IO.inspect(personal_mails, label: "personal_mails"),
+         undeal_mails <-
+           (global_mails ++ personal_mails) |> Enum.sort_by(&(create_time > &1.create_time)),
          {_added_num, mails} <- add_undeal_mails(undeal_mails, mails, create_time) do
       Mail.Personal.clear_mails(role_id)
+
+      IO.inspect(mails, label: "on_init")
 
       if global_mails != [] do
         last_gmail_id = List.last(global_mails).id
@@ -42,6 +55,11 @@ defmodule Role.Mod.Mail do
         state
     end
   end
+
+  # def secondloop(state, now) do
+  #   Process.sleep(300)
+  #   state
+  # end
 
   def secondloop(~M{%M role_id,mails,last_gmail_id} = state, now) do
     with true <- rem(now, @fetch_interval) == rem(role_id, @fetch_interval),
@@ -56,6 +74,7 @@ defmodule Role.Mod.Mail do
       |> Enum.reverse()
       |> broadcast_mails()
 
+      IO.inspect(mails, label: "secondloop")
       state
     else
       _ ->
@@ -83,8 +102,8 @@ defmodule Role.Mod.Mail do
 
   def h(~M{%M mails}, ~M{%Pbm.Mail.Info2S}) do
     mails =
-      for ~M{%Mail id,oid,args,body,attachs,create_time,expire_time,status} <- mails do
-        ~M{%Pbm.Mail.Mail2C id,oid,args,body,attachs,create_time,expire_time,status}
+      for ~M{%Mail id,cfg_id,args,body,attachs,create_time,expire_time,status} <- mails do
+        ~M{%Pbm.Mail.Mail2C id,cfg_id,args,body,attachs,create_time,expire_time,status}
       end
 
     ~M{%Pbm.Mail.Info2C mails} |> sd()
@@ -94,8 +113,9 @@ defmodule Role.Mod.Mail do
   defp broadcast_mails([]), do: :ok
 
   defp broadcast_mails([mail | mails]) do
-    ~M{%Mail id,body,attachs,create_time,expire_time,status} = mail
-    ~M{%Pbm.Mail.Mail2C id,body,attachs,create_time,expire_time,status} |> sd()
+    ~M{%Mail id,cfg_id,body,attachs,create_time,expire_time,status} = mail
+    ~M{%Pbm.Mail.Mail2C id,cfg_id,body,attachs,create_time,expire_time,status} |> sd()
+    Logger.debug(~M{%Pbm.Mail.Mail2C id,cfg_id,body,attachs,create_time,expire_time,status})
     broadcast_mails(mails)
   end
 end

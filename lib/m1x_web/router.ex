@@ -21,6 +21,7 @@ defmodule M1xWeb.Router do
     get "/get_pbclass", PageController, :get_pbclass
     get "/get_log", PageController, :get_log
     live "/roles", RolesLive
+    live "/modal", MailLive, :modal
   end
 
   # Other scopes may use custom stacks.
