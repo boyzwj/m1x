@@ -8,6 +8,7 @@ defmodule Team.Sup do
   @impl true
   def init(_opts) do
     children = [
+      {Team.Matcher.Svr, 1},
       {Team.Manager, []},
       {DynamicSupervisor,
        [
