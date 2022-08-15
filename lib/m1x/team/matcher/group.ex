@@ -109,12 +109,18 @@ defmodule Team.Matcher.Group do
 
     cond do
       side1_num == flag and side2_num == flag ->
-        state
+        with [~M{} = team_info1, ~M{} = team_info2 | _] <-
+               Pool.get_waiting_team_list({@type_single, base_id}),
+             {:ok, state} <- do_join(state, team_info1),
+             {:ok, state} <- do_join(state, team_info2) do
+          start(state)
+        else
+          _ ->
+            state
+        end
 
       side1_num == flag and side2_num == @side_max ->
-        with [{_match_time, _pool_id, team_id} | _] <-
-               Pool.get_team_list({@type_single, base_id}),
-             team_info <- Team.Matcher.Team.get(team_id),
+        with [~M{} = team_info | _] <- Pool.get_waiting_team_list({@type_single, base_id}),
              {:ok, state} <- do_join(state, team_info) do
           start(state)
         else
@@ -123,7 +129,13 @@ defmodule Team.Matcher.Group do
         end
 
       side1_num == @side_max and side2_num == flag ->
-        state
+        with [~M{} = team_info | _] <- Pool.get_waiting_team_list({@type_single, base_id}),
+             {:ok, state} <- do_join(state, team_info) do
+          start(state)
+        else
+          _ ->
+            state
+        end
 
       true ->
         state

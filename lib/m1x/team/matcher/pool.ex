@@ -40,6 +40,20 @@ defmodule Team.Matcher.Pool do
     end
   end
 
+  def get_waiting_team_list(id) do
+    with ~M{team_list} <- get(id) do
+      team_list
+      |> SortedSet.to_list()
+      |> Enum.map(fn {_, _, team_id} ->
+        MTeam.get(team_id)
+      end)
+      |> Enum.filter(&(&1.status == 0))
+    else
+      _ ->
+        []
+    end
+  end
+
   def scan(~M{%Pool id,team_list} = state) do
     team_list
     |> SortedSet.to_list()
