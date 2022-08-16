@@ -4,6 +4,7 @@ defmodule Team.Matcher do
   alias Team.Matcher
   alias Team.Matcher.Pool
   alias Team.Matcher.Team, as: MTeam
+  alias Team.Matcher.Group
   @max_team_member_count 5
   @loop_interval 1000
 
@@ -29,11 +30,13 @@ defmodule Team.Matcher do
 
   def join(~M{%__MODULE__  now, team_ids} = state, [
         team_id,
-        member_num,
+        role_ids,
         avg_elo,
         warm
       ])
-      when member_num >= 1 and member_num <= @max_team_member_count do
+      when length(role_ids) >= 1 and length(role_ids) <= @max_team_member_count do
+    member_num = length(role_ids)
+
     pool_type =
       cond do
         warm == true -> @type_warm
@@ -43,7 +46,10 @@ defmodule Team.Matcher do
 
     base_pool_id = Pool.get_base_id_by_elo(avg_elo)
     pool_id = {pool_type, base_pool_id}
-    team_info = MTeam.new(~M{team_id,member_num,avg_elo,base_pool_id,pool_id,match_time: now})
+
+    team_info =
+      MTeam.new(~M{team_id,member_num,role_ids,avg_elo,base_pool_id,pool_id,match_time: now})
+
     Pool.get(pool_id) |> Pool.add_team(team_info) |> Pool.set()
     MTeam.set(team_info)
     team_ids = MapSet.put(team_ids, team_id)
@@ -71,6 +77,7 @@ defmodule Team.Matcher do
     now = Util.unixtime()
 
     ~M{state|now}
+    |> loop_group()
     |> loop_team()
     |> loop_pool()
   end
@@ -95,21 +102,22 @@ defmodule Team.Matcher do
     state
   end
 
+  defp loop_group(state) do
+    for token <- Group.get_waiting_list() do
+      Group.get(token) |> Group.loop()
+    end
+
+    state
+  end
+
   defp reply(state, reply) do
     {reply, state}
   end
 
-  def test1() do
-    Team.Matcher.Svr.join(1001, [1, 2, 1200, false])
-    Team.Matcher.Svr.join(1001, [2, 3, 1300, false])
-    Team.Matcher.Svr.join(1001, [3, 2, 1300, false])
-    Team.Matcher.Svr.join(1001, [4, 3, 1200, false])
-  end
-
-  def test2() do
-    Team.Matcher.Svr.join(1002, [101, 1, 1600, true])
-    Team.Matcher.Svr.join(1002, [102, 2, 1650, true])
-    Team.Matcher.Svr.join(1002, [103, 1, 1650, true])
-    Team.Matcher.Svr.join(1002, [104, 1, 1600, true])
+  def test3() do
+    Team.Matcher.Svr.join(1002, [101, [1001], 1600, false])
+    Team.Matcher.Svr.join(1002, [102, [1002, 1003, 1004, 1005], 1650, false])
+    Team.Matcher.Svr.join(1002, [103, [1006], 1650, false])
+    Team.Matcher.Svr.join(1002, [104, [1007, 1008, 1009, 1100], 1600, false])
   end
 end
