@@ -53,32 +53,32 @@ defmodule M1xWeb.MailLive do
   end
 
   def handle_event("send_mail", %{"send_mail" => %{"mail_type" => "1"} = params}, socket) do
-    _role_id = String.to_integer(params["role_id"])
-    _cfg_id = String.to_integer(params["cfg_id"])
-    _args = parse_args(params["args"])
-    # Mail.Personal.send_mail([role_id], cfg_id, args, nil)
+    role_id = String.to_integer(params["role_id"])
+    cfg_id = String.to_integer(params["cfg_id"])
+    args = parse_args(params["args"])
+    Mail.Personal.send_mail([role_id], cfg_id, args, nil)
     {:noreply, push_redirect(socket, to: "/")}
   end
 
   def handle_event("send_mail", %{"send_mail" => %{"mail_type" => "2"} = params}, socket) do
-    _role_id = String.to_integer(params["role_id"])
-    _attachs = parse_attachs(params["attachs"])
-    _args = parse_args(params["args"])
-    # Mail.Personal.send_mail([role_id], params["body"], args, attachs, nil)
+    role_id = String.to_integer(params["role_id"])
+    attachs = parse_attachs(params["attachs"])
+    args = parse_args(params["args"])
+    Mail.Personal.send_mail([role_id], params["body"], args, attachs, nil)
     {:noreply, push_redirect(socket, to: "/")}
   end
 
   def handle_event("send_mail", %{"send_mail" => %{"mail_type" => "3"} = params}, socket) do
-    _cfg_id = String.to_integer(params["cfg_id"])
-    _args = parse_args(params["args"])
-    # Mail.Global.send_mail(cfg_id, args, nil)
+    cfg_id = String.to_integer(params["cfg_id"])
+    args = parse_args(params["args"])
+    Mail.Global.send_mail(cfg_id, args, nil)
     {:noreply, push_redirect(socket, to: "/")}
   end
 
   def handle_event("send_mail", %{"send_mail" => %{"mail_type" => "4"} = params}, socket) do
-    _attachs = parse_attachs(params["attachs"])
-    _args = parse_args(params["args"])
-    # Mail.Global.send_mail(params["body"], args, attachs, nil)
+    attachs = parse_attachs(params["attachs"])
+    args = parse_args(params["args"])
+    Mail.Global.send_mail(params["body"], args, attachs, nil)
     {:noreply, push_redirect(socket, to: "/")}
   end
 

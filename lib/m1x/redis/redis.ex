@@ -27,6 +27,10 @@ defmodule Redis do
     select_call("HGETALL", [key])
   end
 
+  def hmget(key, fields) do
+    select_call("HMGET", [key | fields])
+  end
+
   def set(key, value) do
     select_call("SET", [key, value])
   end
