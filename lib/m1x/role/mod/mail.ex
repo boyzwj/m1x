@@ -44,11 +44,11 @@ defmodule Role.Mod.Mail do
 
       IO.inspect(mails, label: "on_init")
 
-      if global_mails != [] do
-        last_gmail_id = List.last(global_mails).id
+      with ~M{id: last_gmail_id} <- List.last(global_mails) do
         ~M{state|mails,last_gmail_id}
       else
-        ~M{state|mails}
+        _ ->
+          ~M{state|mails}
       end
     else
       _ ->
