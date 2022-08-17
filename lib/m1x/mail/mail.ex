@@ -11,6 +11,11 @@ defmodule Mail do
             status: 0
 
   @brief_mail_body_length 5
+  @per_num 2
+  @status_unread 0
+  @status_read_no_take 1
+  @status_finished 2
+  @undeal_status [@status_unread, @status_read_no_take]
 
   def db_key(role_id, mail_id) do
     "mails:#{role_id}:#{mail_id}"
@@ -25,7 +30,8 @@ defmodule Mail do
            calc_new_mails(undeal_mails, old_last_mail_id, mail_ids, create_time),
          true <- last_mail_id > old_last_mail_id || {:error, "nothing change"},
          :ok <- save_mails(new_mails, role_id),
-         {:ok, new_brief_mails} <- update_brief_mails(new_mails) do
+         {:ok, new_brief_mails} <- update_brief_mails(new_mails),
+         :ok <- update_pagination(mail_ids) do
       {last_mail_id, mail_ids, new_brief_mails}
     else
       error ->
@@ -74,6 +80,10 @@ defmodule Mail do
     Process.get({Role.Mod.Mail, :brief_mails}, %{})
   end
 
+  def get_brief_mail(mail_id) do
+    get_brief_mails() |> Map.get(mail_id)
+  end
+
   def init_brief_mails(role_id, mail_ids) do
     for mail_id <- mail_ids, into: %{} do
       ~M{%Mail id,cfg_id,body,status} = get(role_id, mail_id)
@@ -105,5 +115,64 @@ defmodule Mail do
 
   def set(role_id, mail_id, value) do
     db_key(role_id, mail_id) |> Redis.set(value)
+  end
+
+  def update_pagination(mail_ids) do
+    Enum.chunk_every(mail_ids, @per_num)
+    |> then(&Process.put({Role.Mod.Mail, :pagination}, &1))
+
+    :ok
+  end
+
+  def get_per_num() do
+    @per_num
+  end
+
+  def get_undeal_num() do
+    get_brief_mails() |> Enum.filter(&(elem(&1, 1).status in @undeal_status)) |> length()
+  end
+
+  def list_brief_mails(cur_page) do
+    mails = get_brief_mails()
+
+    Process.get({Role.Mod.Mail, :pagination}, [])
+    |> Enum.at(cur_page, [])
+    |> Enum.map(&Map.get(mails, &1))
+  end
+
+  def calc_mail_status(%Mail{status: status}, :read)
+      when status in [@status_finished, @status_read_no_take],
+      do: {:error, :aready_read}
+
+  def calc_mail_status(%Mail{status: @status_unread, attachs: []}, :read),
+    do: {:ok, @status_finished}
+
+  def calc_mail_status(%Mail{status: @status_unread, attachs: [_ | _]}, :read),
+    do: {:ok, @status_read_no_take}
+
+  def calc_mail_status(%Mail{status: @status_finished}, :take), do: {:error, :aready_took}
+  def calc_mail_status(%Mail{attachs: []}, :take), do: {:error, :attach_empty}
+
+  def calc_mail_status(%Mail{status: @status_read_no_take, attachs: [_ | _]}, :take),
+    do: {:ok, @status_finished}
+
+  def calc_mail_status(%Mail{status: @status_unread, attachs: [_ | _]}, :take),
+    do: {:ok, @status_finished}
+
+  def calc_mail_status(mail, action),
+    do: {:unknow_status, mail, action}
+
+  def update_mail(~M{%Mail id} = mail, role_id) do
+    with "OK" <- save(mail, role_id),
+         %Pbm.Mail.BriefMail2C{} = brief_mail <- get_brief_mail(id) do
+      get_brief_mails()
+      |> Map.put(id, brief_mail)
+      |> set_brief_mails()
+
+      {:ok, brief_mail}
+    else
+      error ->
+        {:error, error}
+    end
   end
 end

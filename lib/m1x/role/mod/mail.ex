@@ -57,26 +57,44 @@ defmodule Role.Mod.Mail do
     end
   end
 
-  def h(~M{%M }, ~M{%Pbm.Mail.Info2S}) do
-    mails =
-      for ~M{id,cfg_id,status,body} <- Mail.get_brief_mails() do
-        ~M{%Pbm.Mail.BriefMail2C id,cfg_id,status,body}
-      end
+  def h(~M{%M mail_ids}, ~M{%Pbm.Mail.Info2S}) do
+    total_num = length(mail_ids)
+    undeal_num = Mail.get_undeal_num()
+    per_num = Mail.get_per_num()
 
-    ~M{%Pbm.Mail.Info2C mails} |> sd()
+    ~M{%Pbm.Mail.Info2C total_num,per_num,undeal_num} |> sd()
     :ok
   end
 
   def h(~M{%M role_id}, ~M{%Pbm.Mail.Mail2S id}) do
-    with ~M{%Mail id,cfg_id,body,args,attachs,create_time,expire_time,status} <-
-           Mail.get(role_id, id) do
+    with ~M{%Mail id,cfg_id,body,args,attachs,create_time,expire_time} = mail <-
+           Mail.get(role_id, id),
+         {:ok, status} <- Mail.calc_mail_status(mail, :read),
+         {:ok, brief_mail} <- Mail.update_mail(~M{mail|status}, role_id) do
       ~M{%Pbm.Mail.Mail2C id,cfg_id,body,args,attachs,create_time,expire_time,status} |> sd()
+      ~M{%Pbm.Mail.TakeAttach2C brief_mail} |> sd()
     else
       nil ->
         throw("mail no found! id: #{id}")
     end
 
     :ok
+  end
+
+  def h(~M{%M }, ~M{%Pbm.Mail.ListBriefMail2S cur_page}) do
+    brief_mails = Mail.list_brief_mails(cur_page)
+    ~M{%Pbm.Mail.ListBriefMail2C brief_mails,cur_page} |> sd()
+    :ok
+  end
+
+  def h(~M{%M role_id}, ~M{%Pbm.Mail.TakeAttach2S id}) do
+    with ~M{%Mail } = mail <- Mail.get(role_id, id),
+         {:ok, status} <- Mail.calc_mail_status(mail, :take),
+         {:ok, brief_mail} <- Mail.update_mail(~M{mail|status}, role_id) do
+      #  TODO need add attach to bag
+
+      ~M{%Pbm.Mail.TakeAttach2C brief_mail} |> sd()
+    end
   end
 
   defp broadcast_mails(brief_mails) do
