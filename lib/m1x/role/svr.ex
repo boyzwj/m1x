@@ -144,7 +144,7 @@ defmodule Role.Svr do
     rescue
       err ->
         Logger.warning(
-          "callback_fun error: #{inspect(err)},mod_fun: #{inspect(mod_fun)},args: (#{inspect(args)})"
+          "#{inspect(err)},args: #{inspect(args)},stacktrace: #{inspect(__STACKTRACE__)}"
         )
 
         {:noreply, state}
