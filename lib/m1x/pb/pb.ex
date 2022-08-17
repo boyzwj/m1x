@@ -21,6 +21,7 @@ defmodule PB do
 
       mod
     end
+    |> Enum.filter(&(!("#{&1}" |> String.ends_with?("Dsa"))))
     |> Enum.to_list()
 
   def modules() do

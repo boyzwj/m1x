@@ -7,16 +7,31 @@ import "common.proto";
 message Info2S{} 
 
 message Info2C{
-    repeated Mail2C mails = 1;
+    repeated BriefMail2C mails = 1;
 }
 
+
+//请求邮件信息
+message Mail2S{
+    uint32 id = 1; //唯一id
+} 
+
+//完整邮件
 message Mail2C{
-    uint32 id = 1; //邮件递增id
-    uint32 cfg_id = 2; //邮件来源id oid=0时为自定义邮件 oid>0时为系统邮件
+    uint32 id = 1; //唯一id
+    uint32 cfg_id = 2; //邮件来源id 等于0时为自定义邮件，大于0时为系统邮件
     string body = 3; //邮件内容
     repeated uint32 args = 4; //邮件内容参数
     repeated uint32 attachs = 5; //附件
     uint32 create_time = 6; //创建时间
     uint32 expire_time = 7; //过期时间
     uint32 status = 8; //邮件状态 0：未读|1：已读未领取|2：已读已领取|
+}
+
+// 简洁邮件
+message BriefMail2C{
+    uint32 id = 1; //唯一id
+    uint32 cfg_id = 2; //邮件来源id 等于0时为自定义邮件，大于0时为系统邮件
+    string body = 3; //邮件内容
+    uint32 status = 4; //邮件状态 0：未读|1：已读未领取|2：已读已领取|
 }

@@ -144,7 +144,7 @@ defmodule Role.Svr do
     rescue
       err ->
         Logger.warning(
-          "callback_fun error: #{inspect(err)},mod_fun: #{inspect(mod_fun)},args: (#{inspect(args)})"
+          "#{inspect(err)},  args: #{inspect(args)} \n    Stacktrace: #{inspect(__STACKTRACE__)}"
         )
 
         {:noreply, state}
@@ -238,15 +238,9 @@ defmodule Role.Svr do
   end
 
   defp hook(f, args \\ []) do
-    args_len = length(args)
-
     for mod <- PB.modules() do
       try do
-        if function_exported?(mod, f, args_len) do
-          apply(mod, f, args)
-        else
-          true
-        end
+        apply(mod, f, args)
       catch
         kind, reason ->
           Logger.error(
