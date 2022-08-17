@@ -1,8 +1,18 @@
 defmodule Team.Matcher.Group do
-  defstruct base_id: 0, type: 0, side1: [], side1_num: 0, side2: [], side2_num: 0
+  defstruct token: nil,
+            base_id: 0,
+            type: 0,
+            side1: [],
+            side1_num: 0,
+            side2: [],
+            side2_num: 0,
+            ready_state: %{},
+            match_time: 0
+
   use Common
   alias Team.Matcher.Group
   alias Team.Matcher.Pool
+  alias Team.Matcher.Team, as: MTeam
   @type_single 1
   @type_team 2
   @type_mix 3
@@ -147,15 +157,66 @@ defmodule Team.Matcher.Group do
   end
 
   def start(~M{%Group side1, side2} = state) do
-    for ~M{team_id} <- side1 ++ side2 do
-      Logger.debug("set match : #{team_id}")
+    token = UUID.uuid4()
 
-      Team.Matcher.Team.get(team_id)
-      |> Team.Matcher.Team.set_match()
-      |> Team.Matcher.Team.set()
-    end
+    all_role_ids =
+      for ~M{%MTeam team_id,role_ids} <- side1 ++ side2 do
+        Logger.debug("set match : #{team_id}")
+
+        MTeam.get(team_id)
+        |> MTeam.set_match(token)
+        |> MTeam.set()
+
+        role_ids
+      end
+      |> Enum.concat()
+
+    all_role_ids
+    |> Enum.zip_with(0..9, fn role_id, pos ->
+      {pos, %Pbm.Team.PositionInfo{role_id: role_id}}
+    end)
+    |> Enum.into(%{})
+    |> (&%Pbm.Team.ReadyMatch2C{infos: &1}).()
+    |> broad_cast(all_role_ids)
 
     Logger.debug("do start #{inspect(state)}")
-    state
+    match_time = Util.unixtime()
+    ~M{state| token,match_time} |> add_waiting_list()
+  end
+
+  defp broad_cast(msg, role_ids) do
+    role_ids |> Enum.each(&Role.Misc.send_to(msg, &1))
+  end
+
+  def get_waiting_list() do
+    Process.get({__MODULE__, :waiting_list}, [])
+  end
+
+  def add_waiting_list(~M{%__MODULE__  token} = state) do
+    l = [token | get_waiting_list()]
+    Process.put({__MODULE__, :waiting_list}, l)
+    set(state)
+  end
+
+  def rm_from_waiting_list(token) do
+    l = get_waiting_list() |> List.delete(token)
+    Process.put({__MODULE__, :waiting_list}, l)
+    delete(token)
+  end
+
+  def loop(~M{%__MODULE__ side1,side2,token} = state) do
+    IO.inspect(state)
+  end
+
+  def set(~M{%__MODULE__  token} = state) do
+    Process.put({__MODULE__, token}, state)
+  end
+
+  def get(token) do
+    Process.get({__MODULE__, token})
+  end
+
+  def delete(token) do
+    Process.delete({__MODULE__, token})
   end
 end

@@ -2,6 +2,11 @@ defmodule Role.Mod.Team do
   defstruct role_id: nil, team_id: 0, status: 0
   use Role.Mod
 
+  @status_idle 0
+  @status_matching 1
+  @status_ready 2
+  @status_battle 3
+
   def h(~M{%M team_id} = _state, ~M{%Pbm.Team.Info2S }) do
     if team_id == 0 do
       info = %Pbm.Team.BaseInfo{team_id: 0}
@@ -63,5 +68,13 @@ defmodule Role.Mod.Team do
       {:error, error} ->
         throw(error)
     end
+  end
+
+  def h(~M{%M team_id, role_id} = _state, ~M{%Pbm.Team.ReadyMatch2S reply}) do
+    if team_id == 0 do
+      throw("你不在一个队伍中")
+    end
+
+    Team.Svr.ready_match(team_id, [role_id, reply])
   end
 end

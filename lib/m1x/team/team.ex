@@ -61,7 +61,7 @@ defmodule Team do
     end
   end
 
-  def begin_match(~M{%Team team_id,leader_id,status,mode,member_num} = state, [role_id]) do
+  def begin_match(~M{%Team team_id,leader_id,status,mode,members} = state, [role_id]) do
     if role_id != leader_id do
       throw("你不是队长")
     end
@@ -75,9 +75,14 @@ defmodule Team do
     end
 
     avg_elo = get_avg_elo(state)
-    Team.Matcher.Svr.join(mode, [team_id, member_num, avg_elo])
+    Team.Matcher.Svr.join(mode, [team_id, Map.values(members), avg_elo, false])
     state = ~M{state| status: @status_matching} |> sync()
     {{:ok, status}, state}
+  end
+
+  def ready_match(~M{%Team team_id,mode} = state, [role_id, reply]) do
+    Team.Matcher.Svr.ready_match(mode, [team_id, role_id, reply])
+    {:ok, state}
   end
 
   defp find_free_pos(state, poses \\ @positions)
@@ -138,8 +143,12 @@ defmodule Team do
   defp get_avg_elo(~M{%Team member_num}) do
     role_ids()
     |> Enum.reduce(fn id, acc ->
-      ~M{elo} = Role.Mod.Role.load(id)
-      elo + acc
+      with ~M{elo} <- Role.Mod.Role.load(id) do
+        elo + acc
+      else
+        _ ->
+          acc
+      end
     end)
     |> div(member_num)
   end

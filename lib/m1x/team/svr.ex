@@ -17,6 +17,16 @@ defmodule Team.Svr do
     call(team_id, {func, args})
   end
 
+  def ready_match(team_id, args) do
+    {func, _} = __ENV__.function
+    cast(team_id, {func, args})
+  end
+
+  def match_ok(team_id, args) do
+    {func, _} = __ENV__.function
+    cast(team_id, {func, args})
+  end
+
   def name(team_id) do
     :"Team_#{team_id}"
   end
@@ -39,7 +49,7 @@ defmodule Team.Svr do
       cast(pid, msg)
     else
       _ ->
-        {:error, :room_not_exist}
+        {:error, :team_not_exist}
     end
   end
 
@@ -83,6 +93,21 @@ defmodule Team.Svr do
     catch
       error ->
         {:reply, {:error, error}, state}
+    end
+  end
+
+  @impl true
+  def handle_cast({func, args}, state) do
+    try do
+      {:ok, state} = :erlang.apply(Team, func, [state, args])
+      {:noreply, state}
+    catch
+      error ->
+        Logger.error(
+          "handle cast error Fun: #{func} args: #{inspect(args)}, error: #{inspect(error)}"
+        )
+
+        {:noreply, state}
     end
   end
 

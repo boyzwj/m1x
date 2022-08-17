@@ -1,6 +1,8 @@
 defmodule Team.Matcher.Team do
   defstruct team_id: 0,
+            token: nil,
             member_num: 0,
+            role_ids: [],
             avg_elo: 0,
             match_time: 0,
             next_jump_up_time: 0,
@@ -25,7 +27,7 @@ defmodule Team.Matcher.Team do
 
   alias Team.Matcher.Pool
 
-  def new(~M{team_id,member_num,avg_elo,match_time,pool_id}) do
+  def new(~M{team_id,member_num,role_ids,avg_elo,match_time,pool_id}) do
     status = @status_waiting
     {_type, base_pool_id} = pool_id
 
@@ -40,6 +42,7 @@ defmodule Team.Matcher.Team do
     %__MODULE__{
       team_id: team_id,
       member_num: member_num,
+      role_ids: role_ids,
       avg_elo: avg_elo,
       pool_id: pool_id,
       pool_ids: pool_ids,
@@ -178,9 +181,9 @@ defmodule Team.Matcher.Team do
     Process.put({__MODULE__, team_id}, team)
   end
 
-  def set_match(state) do
+  def set_match(state, token) do
     status = @status_matched
-    ~M{state| status}
+    ~M{state| status,token}
   end
 
   def matched?(~M{status}) do
