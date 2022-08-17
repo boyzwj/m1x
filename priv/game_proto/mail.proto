@@ -3,15 +3,30 @@ package pbm.mail;
 
 import "common.proto";
 
-//请求邮件信息
-message Info2S{} 
+//请求邮件基本信息
+message Info2S{
+    uint32 per_num = 1; //每页数量
+} 
 
 message Info2C{
-    repeated BriefMail2C mails = 1;
+    uint32 total_num = 1; //邮件总数
+    uint32 per_num = 2; // 每页数量
+    uint32 undeal_num = 3; // 未处理邮件数量（未读和未领取的数量）
+}
+
+// 邮件列表
+message ListBriefMail2S{
+    uint32 cur_page = 1;//当前页数（从0开始）
+}
+
+// 邮件列表
+message ListBriefMail2C{
+    repeated BriefMail2C brief_mails = 1;
+    uint32 cur_page = 2;
 }
 
 
-//请求邮件信息
+//请求完整邮件信息
 message Mail2S{
     uint32 id = 1; //唯一id
 } 
@@ -35,3 +50,13 @@ message BriefMail2C{
     string body = 3; //邮件内容
     uint32 status = 4; //邮件状态 0：未读|1：已读未领取|2：已读已领取|
 }
+
+// 领取附件
+message TakeAttach2S{
+    uint32 id = 1; //邮件唯一id
+} 
+
+// 领取附件成功
+message TakeAttach2C{
+    BriefMail2C brief_mail = 1; //邮件
+} 
