@@ -67,11 +67,11 @@ defmodule Mail do
   end
 
   defp set_brief_mails(brief_mails) do
-    Process.put({__MODULE__, :brief_mails}, brief_mails)
+    Process.put({Role.Mod.Mail, :brief_mails}, brief_mails)
   end
 
   def get_brief_mails() do
-    Process.get({__MODULE__, :brief_mails}, %{})
+    Process.get({Role.Mod.Mail, :brief_mails}, %{})
   end
 
   def init_brief_mails(role_id, mail_ids) do
@@ -101,8 +101,6 @@ defmodule Mail do
     |> Redis.hgetall()
     |> decode()
   end
-
-  # defp parse_field_type(~M{%Mail id,cfg_id,body,args,})
 
   def get(role_id, mail_id, field) do
     db_key(role_id, mail_id)

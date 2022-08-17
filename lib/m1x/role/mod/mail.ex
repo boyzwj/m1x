@@ -6,18 +6,13 @@ defmodule Role.Mod.Mail do
   # 从个人邮箱拉去个人邮件
   # 通知新邮件给客户端
   def on_receive_new_mail(~M{%M role_id,last_mail_id,mail_ids} = state, _) do
-    IO.inspect("on_receive_new_mail")
-
     with undeal_mails when undeal_mails != [] <- Mail.Personal.fetch_all_mails(role_id),
          {last_mail_id, mail_ids, new_brief_mails} <-
-           Mail.add_mails(role_id, undeal_mails, last_mail_id, mail_ids, nil),
-         ~M{%__MODULE__ } <- ~M{state|last_mail_id,mail_ids} |> set_data() do
+           Mail.add_mails(role_id, undeal_mails, last_mail_id, mail_ids, nil) do
+      ~M{state|last_mail_id,mail_ids} |> set_data()
       Mail.Personal.clear_mails(role_id)
       IO.inspect(mail_ids, label: "on_receive_new_mail")
       broadcast_mails(new_brief_mails)
-    else
-      _ ->
-        state
     end
   end
 
@@ -55,21 +50,11 @@ defmodule Role.Mod.Mail do
          global_mails when global_mails != [] <- Mail.Global.fetch_mails(last_gmail_id),
          {last_mail_id, mail_ids, new_brief_mails} <-
            Mail.add_mails(role_id, global_mails, last_mail_id, mail_ids, nil),
-         ~M{%Mail id: last_gmail_id} <- List.last(global_mails),
-         state <- ~M{state|last_mail_id,mail_ids,last_gmail_id} do
-      set_data(state)
-
-      broadcast_mails(new_brief_mails)
+         ~M{%Mail id: last_gmail_id} <- List.last(global_mails) do
+      ~M{state|last_mail_id,mail_ids,last_gmail_id} |> set_data()
       IO.inspect(mail_ids, label: "secondloop")
-      state
-    else
-      _ ->
-        state
+      broadcast_mails(new_brief_mails)
     end
-  end
-
-  def secondloop(state, _now) do
-    state
   end
 
   def h(~M{%M }, ~M{%Pbm.Mail.Info2S}) do
@@ -82,12 +67,10 @@ defmodule Role.Mod.Mail do
     :ok
   end
 
-  defp broadcast_mails([]), do: :ok
-
-  defp broadcast_mails([brief_mail | brief_mails]) do
-    ~M{id,cfg_id,status,body} = brief_mail
-    ~M{%Pbm.Mail.BriefMail2C id,cfg_id,status,body} |> sd()
-    Logger.debug(~M{%Pbm.Mail.BriefMail2C id,cfg_id,status,body})
-    broadcast_mails(brief_mails)
+  defp broadcast_mails(brief_mails) do
+    for {_, ~M{id,cfg_id,status,body}} <- brief_mails do
+      ~M{%Pbm.Mail.BriefMail2C id,cfg_id,status,body} |> sd()
+      Logger.debug(~M{%Pbm.Mail.BriefMail2C id,cfg_id,status,body})
+    end
   end
 end
