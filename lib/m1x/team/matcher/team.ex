@@ -186,6 +186,11 @@ defmodule Team.Matcher.Team do
     ~M{state| status,token}
   end
 
+  def unlock(state) do
+    status = @status_waiting
+    ~M{state| status,token: nil}
+  end
+
   def matched?(~M{status}) do
     status == @status_matched
   end

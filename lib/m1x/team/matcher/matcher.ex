@@ -56,6 +56,23 @@ defmodule Team.Matcher do
     ~M{state | team_ids} |> reply(:ok)
   end
 
+  def ready_match(~M{%__MODULE__ } = state, [team_id, role_id, reply]) do
+    with ~M{%MTeam token} <- MTeam.get(team_id),
+         ~M{%Group } = group <- Group.get(token) do
+      with :ok <- Group.client_reply(group, [team_id, role_id, reply]) do
+        :ok
+      else
+        {:error, team_id} ->
+          cancel_match(state, [team_id])
+      end
+
+      state |> reply(:ok)
+    else
+      _ ->
+        state |> reply(:ok)
+    end
+  end
+
   def cancel_match(~M{%__MODULE__ team_ids} = state, [team_id]) do
     if not MapSet.member?(team_ids, team_id) do
       throw("不在匹配队列中了")
@@ -116,8 +133,8 @@ defmodule Team.Matcher do
 
   def test3() do
     Team.Matcher.Svr.join(1002, [101, [1001], 1600, false])
-    Team.Matcher.Svr.join(1002, [102, [1002, 1003, 1004, 1005], 1650, false])
+    Team.Matcher.Svr.join(1002, [102, [1002, 1003, 1004, 1005], 1670, false])
     Team.Matcher.Svr.join(1002, [103, [1006], 1650, false])
-    Team.Matcher.Svr.join(1002, [104, [1007, 1008, 1009, 1100], 1600, false])
+    Team.Matcher.Svr.join(1002, [104, [1007, 1008, 1009, 1100], 1500, false])
   end
 end

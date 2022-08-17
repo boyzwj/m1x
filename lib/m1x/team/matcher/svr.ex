@@ -2,8 +2,12 @@ defmodule Team.Matcher.Svr do
   use GenServer
   use Common
 
-  def join(mod, args) do
-    call(mod, {:join, args})
+  def join(mode, args) do
+    call(mode, {:join, args})
+  end
+
+  def ready_match(mode, args) do
+    call(mode, {:ready_match, args})
   end
 
   def child_spec(mode) do
