@@ -1,5 +1,6 @@
 defmodule Lobby.Room do
   defstruct room_id: 0,
+            room_type: 0,
             owner_id: nil,
             status: 0,
             map_id: 0,
@@ -17,15 +18,16 @@ defmodule Lobby.Room do
 
   @positions [0, 5, 1, 6, 2, 7, 3, 8, 4, 9, 10, 11, 12]
 
-  def init([room_id, owner_id, map_id, password]) do
+  def init([room_id, room_type, role_ids, map_id, password]) do
+    owner_id = List.first(role_ids)
     Logger.debug("Room.Svr room_id: [#{room_id}] owenr_id: [#{owner_id}]  start")
     :pg.join(M, self())
     create_time = Util.unixtime()
     last_game_time = create_time
 
     state =
-      ~M{%M room_id,map_id,password,create_time,last_game_time,owner_id}
-      |> do_join(owner_id)
+      ~M{%M room_id,room_type,map_id,password,create_time,last_game_time,owner_id}
+      |> do_join(role_ids)
 
     :ets.insert(Room, {room_id, state})
     Process.send_after(self(), :secondloop, @loop_interval)
@@ -136,12 +138,16 @@ defmodule Lobby.Room do
     state |> sync() |> ok()
   end
 
-  defp do_join(~M{%M members, member_num} = state, role_id) do
+  defp do_join(state, []), do: state
+
+  defp do_join(~M{%M members, member_num} = state, [role_id | t]) do
     pos = find_free_pos(state)
     members = members |> Map.put(pos, role_id)
     add_role_id(role_id)
     member_num = member_num + 1
+
     ~M{state | member_num ,members}
+    |> do_join(t)
   end
 
   @doc """

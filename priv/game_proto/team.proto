@@ -86,7 +86,7 @@ message CancelMatch2S{
 //坑位状态
 message PositionInfo{
     uint64 role_id = 1;
-    uint32 ready_state=2; //装备状态 (0未准备 | 1 准备)
+    uint32 ready_state=2; //装备状态 (0未准备 | 1 准备 | 2 拒绝)
  
 }
 

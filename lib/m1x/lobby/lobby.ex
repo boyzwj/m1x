@@ -5,7 +5,8 @@ defmodule Lobby do
   use PipeTo.Override
 
   alias __MODULE__, as: M
-
+  @room_type_free 1
+  @room_type_match 2
   def init() do
     queue = LimitedQueue.new(10_000)
     queue = 1001..2000 |> Enum.reduce(queue, &LimitedQueue.push(&2, &1))
@@ -42,8 +43,8 @@ defmodule Lobby do
   end
 
   def get_room_list(~M{%M } = state, [role_id, select_map_id]) do
-    f = fn {_, ~M{%Lobby.Room map_id} = data}, acc ->
-      if select_map_id == 0 || select_map_id == map_id do
+    f = fn {_, ~M{%Lobby.Room map_id,room_type} = data}, acc ->
+      if (select_map_id == 0 || select_map_id == map_id) && room_type == @room_type_free do
         [Lobby.Room.to_common(data) | acc]
       else
         acc

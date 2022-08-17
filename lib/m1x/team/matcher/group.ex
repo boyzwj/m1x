@@ -19,8 +19,9 @@ defmodule Team.Matcher.Group do
   @type_mix 3
   @type_warm 4
 
-  @rep_refuse 0
+  @rep_unready 0
   @rep_accept 1
+  @rep_refuse 2
 
   @side_max 5
 
@@ -178,7 +179,7 @@ defmodule Team.Matcher.Group do
     infos =
       all_role_ids
       |> Enum.zip_with(0..9, fn role_id, pos ->
-        {pos, %Pbm.Team.PositionInfo{role_id: role_id}}
+        {pos, %Pbm.Team.PositionInfo{role_id: role_id, ready_state: @rep_unready}}
       end)
       |> Enum.into(%{})
 
@@ -234,12 +235,31 @@ defmodule Team.Matcher.Group do
     {:error, cur_team_id}
   end
 
-  def client_reply(~M{%__MODULE__ infos} = state, [team_id, role_id, @rep_accept]) do
+  def client_reply(~M{%__MODULE__ infos,all_role_ids,side1,side2} = state, [
+        cur_team_id,
+        cur_role_id,
+        @rep_accept
+      ]) do
+    infos =
+      for {pos, ~M{%Pbm.Team.PositionInfo role_id} = info} <- infos, into: %{} do
+        if cur_role_id == role_id do
+          {pos, ~M{info| ready_state: @rep_refuse}}
+        else
+          {pos, info}
+        end
+      end
+
+    %Pbm.Team.ReadyMatch2C{infos: infos} |> broad_cast(all_role_ids)
+    ~M{state| infos} |> check_all_ready()
     :ok
   end
 
   def loop(~M{%__MODULE__ side1,side2,token} = state) do
     IO.inspect(state)
+  end
+
+  defp check_all_ready(~M{%__MODULE__ } = state) do
+    state
   end
 
   def set(~M{%__MODULE__  token} = state) do

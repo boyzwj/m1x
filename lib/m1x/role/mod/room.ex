@@ -1,7 +1,8 @@
 defmodule Role.Mod.Room do
-  defstruct role_id: nil,room_id: 0, map_id: 0, status: 0
+  defstruct role_id: nil, room_id: 0, map_id: 0, status: 0
   use Role.Mod
-
+  @room_type_free 1
+  # @room_type_match 2
   @doc """
   协议处理
   """
@@ -27,12 +28,12 @@ defmodule Role.Mod.Room do
     :ok
   end
 
-  def h(~M{%M room_id} = state, ~M{%Pbm.Room.Create2S map_id, password}) do
+  def h(~M{%M room_id,role_id} = state, ~M{%Pbm.Room.Create2S map_id, password}) do
     if room_id != 0 do
       throw("已经在房间里了!")
     end
 
-    with {:ok, room_id} <- Lobby.Svr.create_room([role_id(), map_id, password]) do
+    with {:ok, room_id} <- Lobby.Svr.create_room([@room_type_free, [role_id], map_id, password]) do
       ~M{%Pbm.Room.Create2C room_id} |> sd()
       {:ok, ~M{state | room_id}}
     else
@@ -124,15 +125,13 @@ defmodule Role.Mod.Room do
     ~M{state | room_id:  0} |> set_data()
   end
 
-
   def kicked_from_room(f_role_id) do
     get_data() |> kicked_from_room(f_role_id)
   end
 
-  def kicked_from_room(~M{%M  map_id} = state,_f_role_id)  do
-    room = %Pbm.Room.Room{room_id: 0,map_id: map_id}
-    %Pbm.Room.Update2C{room: room}  |> sd
+  def kicked_from_room(~M{%M  map_id} = state, _f_role_id) do
+    room = %Pbm.Room.Room{room_id: 0, map_id: map_id}
+    %Pbm.Room.Update2C{room: room} |> sd
     ~M{state | room_id:  0} |> set_data()
   end
-
 end
