@@ -1,4 +1,10 @@
 defmodule LoggerFormat do
+  def format(level, message, {date, {h, m, s, ms}}, []) do
+    date = date |> Tuple.to_list() |> Enum.join("-")
+    time = "#{h}:#{m}:#{s}.#{ms}"
+    "### [#{date} #{time}] [#{level}] \n  * #{message}\n\n"
+  end
+
   def format(level, message, {date, {h, m, s, ms}}, metadata) do
     date = date |> Tuple.to_list() |> Enum.join("-")
     time = "#{h}:#{m}:#{s}.#{ms}"
