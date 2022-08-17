@@ -67,6 +67,18 @@ defmodule Role.Mod.Mail do
     :ok
   end
 
+  def h(~M{%M role_id}, ~M{%Pbm.Mail.Mail2S id}) do
+    with ~M{%Mail id,cfg_id,body,args,attachs,create_time,expire_time,status} <-
+           Mail.get(role_id, id) do
+      ~M{%Pbm.Mail.Mail2C id,cfg_id,body,args,attachs,create_time,expire_time,status} |> sd()
+    else
+      nil ->
+        throw("mail no found! id: #{id}")
+    end
+
+    :ok
+  end
+
   defp broadcast_mails(brief_mails) do
     for {_, ~M{id,cfg_id,status,body}} <- brief_mails do
       ~M{%Pbm.Mail.BriefMail2C id,cfg_id,status,body} |> sd()

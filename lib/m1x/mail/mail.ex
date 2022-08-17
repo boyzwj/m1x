@@ -75,14 +75,9 @@ defmodule Mail do
   end
 
   def init_brief_mails(role_id, mail_ids) do
-    fields = %Pbm.Mail.BriefMail2C{} |> Map.from_struct() |> Map.delete(:__uf__) |> Map.keys()
-
     for mail_id <- mail_ids, into: %{} do
-      brief_mail =
-        mget(role_id, mail_id, fields)
-        |> then(&struct(Pbm.Mail.BriefMail2C, &1))
-
-      {mail_id, brief_mail}
+      ~M{%Mail id,cfg_id,body,status} = get(role_id, mail_id)
+      {mail_id, ~M{%Pbm.Mail.BriefMail2C id,cfg_id,body,status}}
     end
     |> set_brief_mails()
   end
@@ -92,65 +87,23 @@ defmodule Mail do
   end
 
   def save(~M{%Mail id} = mail, role_id) do
-    array = encode(mail)
-    db_key(role_id, id) |> Redis.hset_array(array)
+    value = Map.from_struct(mail) |> Poison.encode!()
+    db_key(role_id, id) |> Redis.set(value)
   end
 
   def get(role_id, mail_id) do
-    db_key(role_id, mail_id)
-    |> Redis.hgetall()
-    |> decode()
+    value =
+      db_key(role_id, mail_id)
+      |> Redis.get()
+
+    if is_nil(value) do
+      nil
+    else
+      value |> Poison.decode!(as: %Mail{})
+    end
   end
 
-  def get(role_id, mail_id, field) do
-    db_key(role_id, mail_id)
-    |> Redis.hget(field)
-    |> then(&parse_field_type([field, &1]))
-    |> elem(1)
+  def set(role_id, mail_id, value) do
+    db_key(role_id, mail_id) |> Redis.set(value)
   end
-
-  def set(role_id, mail_id, field, value) do
-    db_key(role_id, mail_id) |> Redis.hset(field, value)
-  end
-
-  def mget(role_id, mail_id, fields) do
-    db_key(role_id, mail_id)
-    |> Redis.hmget(fields)
-    |> Enum.zip_with(fields, &[&2, &1])
-    |> Enum.map(&parse_field_type/1)
-    |> Enum.into(%{})
-  end
-
-  defp encode(~M{%Mail args,attachs} = mail) do
-    args = Poison.encode!(args)
-    attachs = Poison.encode!(attachs)
-
-    ~M{mail|args,attachs}
-    |> Map.from_struct()
-    |> Enum.flat_map(fn {k, v} -> [k, v] end)
-  end
-
-  defp decode(array) do
-    array
-    |> Enum.chunk_every(2)
-    |> parse_fields(%{})
-    |> then(&struct(Mail, &1))
-  end
-
-  defp parse_fields([], result), do: result
-
-  defp parse_fields([h | rest], result) do
-    {k, v} = parse_field_type(h)
-    parse_fields(rest, Map.put(result, k, v))
-  end
-
-  defp parse_field_type([key, value]) when is_atom(key), do: parse_field_type(["#{key}", value])
-  defp parse_field_type(["id", value]), do: {:id, String.to_integer(value)}
-  defp parse_field_type(["cfg_id", value]), do: {:cfg_id, String.to_integer(value)}
-  defp parse_field_type(["body", value]), do: {:body, value}
-  defp parse_field_type(["args", value]), do: {:args, Poison.decode!(value)}
-  defp parse_field_type(["attachs", value]), do: {:attachs, Poison.decode!(value)}
-  defp parse_field_type(["create_time", value]), do: {:create_time, String.to_integer(value)}
-  defp parse_field_type(["expire_time", value]), do: {:expire_time, String.to_integer(value)}
-  defp parse_field_type(["status", value]), do: {:status, String.to_integer(value)}
 end
