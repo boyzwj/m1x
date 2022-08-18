@@ -24,8 +24,8 @@ defmodule Team.Matcher.Svr do
     }
   end
 
+  @spec start_link(any) :: :ignore | {:error, any} | {:ok, pid}
   def start_link(mode) do
-    Logger.debug("start Team matcher, Mode is  #{mode}")
     GenServer.start_link(__MODULE__, [mode], name: via(mode))
   end
 

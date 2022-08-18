@@ -11,19 +11,22 @@ defmodule Data.GameModeMap do
 
 	def get(30011001) do
 		%{
-			id: 30011001
+			id: 30011001,
+			mode_id: 3001
 		}
 	end
 
 	def get(10011002) do
 		%{
-			id: 10011002
+			id: 10011002,
+			mode_id: 1001
 		}
 	end
 
 	def get(10021002) do
 		%{
-			id: 10021002
+			id: 10021002,
+			mode_id: 1002
 		}
 	end
 

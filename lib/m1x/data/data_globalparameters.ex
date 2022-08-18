@@ -2,7 +2,7 @@ defmodule Data.GlobalParameters do
 	## SOURCE:"xls\Q全局参数表.xlsx" SHEET:"Sheet1"
 
 	def ids() do
-		[1, 2, 3, 4]
+		[1, 2, 3, 4, 5]
 	end
 
 	def all(), do: for id <- ids(), do: get(id)
@@ -34,6 +34,13 @@ defmodule Data.GlobalParameters do
 		%{
 			id: 4,
 			value: 15
+		}
+	end
+
+	def get(5) do
+		%{
+			id: 5,
+			value: 30
 		}
 	end
 
