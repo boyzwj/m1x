@@ -1,1 +1,93 @@
-匹配池
+<.container max_width="full">
+<h1>游戏模式：</h1>
+
+<.tabs>
+    <%= for game_mode <- @game_modes do %>
+    <.tab is_active={@active_mode == game_mode} link_type="live_patch" to={"/matchingpool?game_mode=#{game_mode}"}><%= game_mode %> </.tab>
+    <% end %>
+</.tabs>
+
+</.container>
+
+<.container max_width="md">
+<%= if @role_add_modal == false do %>
+      <%= _f = form_for :foo, "#", phx_submit: "show_role_modal" %>
+<% end %>
+        <.button color="primary" label="添加" />
+</.container>
+
+
+
+<.container max_width="full">
+<h1>匹配池：</h1>
+<.table>
+    <.tr>
+        <.th>匹配池基础id</.th>
+        <.th>匹配池名称</.th>
+        <.th>队伍类型</.th>
+        <.th>队伍ID列表</.th>
+    </.tr>
+
+    <%= for pool_info <- @pool_infos do %>
+    <.tr>
+        <.td><%= pool_info.base_id %></.td>
+        <.td>TODO</.td>
+        <.td><%= pool_info.type %></.td>
+        <.td><%= pool_info.team_list %></.td>
+    </.tr>
+    <% end %>
+
+</.table>
+</.container>
+
+
+<.container max_width="full">
+<h1>GROUP：</h1>
+<.table>
+    <.tr>
+        <.th>匹配池基础id</.th>
+        <.th>队伍类型</.th>
+        <.th>side1队伍ID列表</.th>
+        <.th>side1玩家人数</.th>
+        <.th>side2队伍ID列表</.th>
+        <.th>side2玩家人数</.th>
+        <.th>所有玩家ID</.th>
+        <.th>匹配时间</.th>
+    </.tr>
+
+    <%= for group_info <- @group_infos do %>
+    <.tr>
+        <.td><%= group_info.base_id %></.td>
+        <.td><%= group_info.type %></.td>
+        <.td><%= group_info.side1 %></.td>
+        <.td><%= group_info.side1_num %></.td>
+        <.td><%= group_info.side2 %></.td>
+        <.td><%= group_info.side2_num %></.td>
+        <.td><%= group_info.all_role_ids %></.td>
+        <.td><%= group_info.match_time %></.td>
+    </.tr>
+    <% end %>
+
+</.table>
+</.container>
+
+<%= if @role_add_modal do %>
+
+<.container max_width="full">
+
+ <.modal max_width="md" title="添加角色">
+    <%= f = form_for @changeset, "#2", phx_submit: "add_role",phx_change: "validate" %>
+<.form_field label = "游戏模式" type="select" options={@game_modes} form={f} field={:mode} />
+<.form_field label = "队伍id" type="text_input" form={f} field={:team_id} />
+<.form_field label = "角色id列表" type="textarea" form={f} field={:role_ids} />
+
+
+<.form_field label = "平均elo" type="text_input" form={f} field={:avg_elo} />
+<.form_field label = "warm" type="select" options={["是": true,"否": false]} form={f} field={:warm} />
+<.button color="primary" label="发送" type="submit" />
+  
+ </.modal>
+</.container>
+
+<% end %>
+

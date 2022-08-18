@@ -14,6 +14,10 @@ defmodule Team.Matcher.Svr do
     call(mode, {:get_pool_infos, args})
   end
 
+  def get_group_infos(mode, args) do
+    call(mode, {:get_group_infos, args})
+  end
+
   def child_spec(mode) do
     %{
       id: "#{__MODULE__}_#{mode}",
