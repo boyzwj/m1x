@@ -89,6 +89,25 @@ defmodule Team.Matcher do
     end
   end
 
+  def get_pool_infos(~M{%__MODULE__ } = state, _args) do
+    pool_infos =
+      for base_id <- Data.MatchPool.ids(),
+          type <- [@type_single, @type_team, @type_mix, @type_warm] do
+        Pool.get({type, base_id})
+      end
+
+    reply(state, pool_infos)
+  end
+
+  def get_group_infos(~M{%__MODULE__ } = state, _args) do
+    group_infos =
+      for token <- Group.get_waiting_list() do
+        Group.get(token)
+      end
+
+    reply(state, group_infos)
+  end
+
   def loop(state) do
     Process.send_after(self(), :loop, @loop_interval)
     now = Util.unixtime()
