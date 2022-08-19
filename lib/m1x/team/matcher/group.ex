@@ -248,7 +248,7 @@ defmodule Team.Matcher.Group do
     infos =
       for {pos, ~M{%Pbm.Team.PositionInfo role_id} = info} <- infos, into: %{} do
         if cur_role_id == role_id do
-          {pos, ~M{info| ready_state: @rep_refuse}}
+          {pos, ~M{info| ready_state: @rep_accept}}
         else
           {pos, info}
         end
@@ -259,8 +259,9 @@ defmodule Team.Matcher.Group do
     :ok
   end
 
-  def loop(~M{%__MODULE__ side1,side2,token} = state) do
-    state
+  def loop(~M{%__MODULE__ side1,side2,token,infos} = state) do
+    # IO.inspect(infos)
+    check_all_ready(state)
   end
 
   defp check_all_ready(~M{%__MODULE__ all_role_ids, infos} = state) do
@@ -273,7 +274,7 @@ defmodule Team.Matcher.Group do
     if all_role_ids |> Enum.all?(&MapSet.member?(ready_ids, &1)) do
       begin_to_start(state)
     else
-      state
+      state |> set()
     end
   end
 

@@ -32,11 +32,13 @@ defmodule Lobby do
       ) do
     {:ok, room_id} = make_room_id()
     args = [room_id | args]
+    IO.inspect(args)
 
     with {:ok, _pid} <- DynamicSupervisor.start_child(Room.Sup, {Lobby.Room.Svr, args}) do
       {{:ok, room_id}, state}
     else
-      _ ->
+      error ->
+        Logger.error("crear room pid fail ! error : #{inspect(error)}")
         recycle_room_id(room_id)
         throw("房间创建失败")
     end

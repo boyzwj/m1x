@@ -23,12 +23,9 @@ defmodule Team.Matcher.Pool do
   end
 
   def get_base_id_by_elo(elo_value) do
-    Data.MatchScore.ids()
-    |> Enum.filter(fn id ->
-      ~M{elo_min, elo_max} = Data.MatchScore.get(id)
-      elo_value <= elo_max && elo_value >= elo_min
-    end)
+    Data.MatchScore.query(&(elo_value <= &1.elo_max && elo_value >= &1.elo_min))
     |> List.first()
+    |> Map.get(:elo_pot)
   end
 
   def get_team_list(id) do

@@ -85,6 +85,7 @@ defmodule Team.Matcher.Team do
 
   defp check_jump_mix(~M{%__MODULE__ pool_id, jump_mix_time} = state, now) do
     {type, _} = pool_id
+    IO.inspect({now, jump_mix_time})
 
     if now >= jump_mix_time && type != @type_warm do
       do_jump_mix(state, now)

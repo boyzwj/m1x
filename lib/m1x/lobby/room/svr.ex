@@ -113,8 +113,8 @@ defmodule Lobby.Room.Svr do
   end
 
   @impl true
-  def init([room_id, role_id, map_id, password]) do
-    state = Lobby.Room.init([room_id, role_id, map_id, password])
+  def init(args) do
+    state = Lobby.Room.init(args)
     {:ok, state}
   end
 
