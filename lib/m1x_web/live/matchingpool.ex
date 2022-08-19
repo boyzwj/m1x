@@ -22,13 +22,14 @@ defmodule M1xWeb.Matchingpool do
     def changeset(struct, ~m{role_ids} = params) do
       role_ids = role_ids |> String.split("\n")
       params = ~m{params|role_ids}
+      ~M{elo_min} = Data.MatchScore.get(1)
 
       struct
       |> cast(params, [:mode, :team_id, :role_ids, :avg_elo, :warm])
       |> validate_required([:mode, :team_id, :role_ids, :avg_elo, :warm])
       |> validate_number(:mode, greater_than: 0)
       |> validate_number(:team_id, greater_than: 0)
-      |> validate_number(:avg_elo, greater_than: 0)
+      |> validate_number(:avg_elo, greater_than: elo_min)
       |> validate_elo()
     end
 
@@ -105,6 +106,8 @@ defmodule M1xWeb.Matchingpool do
 
       socket
       |> put_flash(:info, "添加成功")
+      |> assign_pool_infos()
+      |> assign_group_infos()
       |> assign(:role_add_modal, false)
       |> then(&{:noreply, &1})
     else
@@ -181,10 +184,3 @@ defmodule M1xWeb.Matchingpool do
     socket |> assign(:group_infos, group_infos)
   end
 end
-
-## <div class="field">
-## <%= label f, :role_ids, "Size (MB)" %>
-## <%= textarea f, :role_ids %>
-## <%= error_tag f, :role_ids %>
-## </div>
-# %{"avg_elo" => "0","mode" => "1001","role_ids" => "","team_id" => "1","warm" => "true"}
