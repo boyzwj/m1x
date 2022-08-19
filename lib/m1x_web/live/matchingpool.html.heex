@@ -1,25 +1,29 @@
-<.container max_width="full" margin="auto">
 
 
-
-</.container>
-
-<.container max_width="full">
+<.container max_width="full" class="flex justify-start ">
 <%= if @role_add_modal == false do %>
       <%= _f = form_for :foo, "#", phx_submit: "show_role_modal" %>
 <% end %>
 <.button color="primary" label="添加" />
 </.container>
 
-
+<.h5 label="" />
 
 <.container max_width="full">
-<.tabs>
-<.h3>匹配池：</.h3>
+
+<.h5 underline label="游戏模式：" />
+<.tabs class="bg-green-100">
+<div class="flex justify-end">
     <%= for game_mode <- @game_modes do %>
-    <.tab is_active={@active_mode == game_mode} link_type="live_patch" to={"/matchingpool?game_mode=#{game_mode}"}><%= game_mode %> </.tab>
+    <.tab  is_active={@active_mode == game_mode} link_type="live_patch" to={"/matchingpool?game_mode=#{game_mode}"}><%= game_mode %> </.tab>
     <% end %>
+</div>
+
 </.tabs>
+
+
+<.h5 label="" />
+<.h5 underline label="匹配池：" />
 <.table>
     <.tr>
         <.th>匹配池基础id</.th>
@@ -42,7 +46,7 @@
 
 
 <.container max_width="full">
-<.h3>GROUP：</.h3>
+<.h3 underline label="GROUP："/>
 <.table>
     <.tr>
         <.th>匹配池基础id</.th>
@@ -76,18 +80,26 @@
 <.container max_width="full">
 
  <.modal max_width="md" title="添加角色">
-    <%= f = form_for @changeset, "#2", phx_submit: "add_role",phx_change: "validate" %>
-<.form_field label = "游戏模式" type="select" options={@game_modes} form={f} field={:mode} />
-<.form_field label = "队伍id" type="text_input" form={f} field={:team_id} />
-<.form_field label = "角色id列表" type="textarea" form={f} field={:role_ids} />
-
-
-<.form_field label = "平均elo" type="text_input" form={f} field={:avg_elo} />
-<.form_field label = "warm" type="select" options={["是": true,"否": false]} form={f} field={:warm} />
-<.button color="primary" label="发送" type="submit" />
-  
+    <.form let={f} for={@changeset} id="xxxx" phx-submit="add_role" phx_change="validate">
+        <.form_field label = "游戏模式" type="select" options={@game_modes} form={f} field={:mode} />
+        <.form_field label = "队伍id" type="text_input" form={f} field={:team_id} />
+        <.form_field label = "角色id列表" type="textarea" form={f} field={:role_ids} />
+        <.form_field label = "平均elo" type="text_input" form={f} field={:avg_elo} />
+        <.form_field label = "warm" type="select" options={["否": false,"是": true]} form={f} field={:warm} />
+        <div class="flex justify-end">
+            <.button
+            type="submit"
+            phx_disable_with="Saving..."
+            label="发送"
+            />
+        </div>
+    </.form>
  </.modal>
 </.container>
 
+
 <% end %>
+
+
+
 
