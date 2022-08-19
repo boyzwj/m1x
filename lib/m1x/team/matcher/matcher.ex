@@ -170,4 +170,18 @@ defmodule Team.Matcher do
     Team.Matcher.Svr.join(1002, [103, [1006], 1650, false])
     Team.Matcher.Svr.join(1002, [104, [1007, 1008, 1009, 1100], 1500, false])
   end
+
+  def test_reply() do
+    Team.Matcher.Svr.ready_match(1002, [101, 1001, 1])
+    Team.Matcher.Svr.ready_match(1002, [102, 1002, 1])
+    Team.Matcher.Svr.ready_match(1002, [102, 1003, 1])
+    Team.Matcher.Svr.ready_match(1002, [102, 1004, 1])
+    Team.Matcher.Svr.ready_match(1002, [102, 1005, 1])
+
+    Team.Matcher.Svr.ready_match(1002, [103, 1006, 1])
+    Team.Matcher.Svr.ready_match(1002, [104, 1007, 1])
+    Team.Matcher.Svr.ready_match(1002, [104, 1008, 1])
+    Team.Matcher.Svr.ready_match(1002, [104, 1009, 1])
+    Team.Matcher.Svr.ready_match(1002, [104, 1100, 1])
+  end
 end

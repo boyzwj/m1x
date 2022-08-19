@@ -32,9 +32,9 @@ defmodule Team.Matcher.Team do
     {_type, base_pool_id} = pool_id
 
     pool_ids = [pool_id]
-    ~M{timedown,timeup,across_frequency,blend_time} = Data.MatchPool.get(base_pool_id)
+    ~M{timeup,across_frequency,blend_time} = Data.MatchPool.get(base_pool_id)
     next_jump_up_time = match_time + timeup
-    next_jump_down_time = match_time + timedown
+    next_jump_down_time = match_time + timeup
     jump_up_left = across_frequency
     jump_down_left = across_frequency
     jump_mix_time = match_time + blend_time
@@ -128,8 +128,8 @@ defmodule Team.Matcher.Team do
        ) do
     Logger.debug("do jump down: #{inspect(pool_ids)}")
     {_, base_pool_id} = pool_id
-    ~M{timedown,across} = Data.MatchPool.get(base_pool_id)
-    next_jump_down_time = now + timedown
+    ~M{timeup,across} = Data.MatchPool.get(base_pool_id)
+    next_jump_down_time = now + timeup
     jump_down_left = jump_down_left - 1
     {type, lowest_pool_id} = pool_ids |> Enum.sort() |> List.first()
 

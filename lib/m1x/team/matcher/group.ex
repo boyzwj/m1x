@@ -243,6 +243,8 @@ defmodule Team.Matcher.Group do
         cur_role_id,
         @rep_accept
       ]) do
+    IO.inspect("reply accept")
+
     infos =
       for {pos, ~M{%Pbm.Team.PositionInfo role_id} = info} <- infos, into: %{} do
         if cur_role_id == role_id do
@@ -258,7 +260,7 @@ defmodule Team.Matcher.Group do
   end
 
   def loop(~M{%__MODULE__ side1,side2,token} = state) do
-    IO.inspect(state)
+    state
   end
 
   defp check_all_ready(~M{%__MODULE__ all_role_ids, infos} = state) do
@@ -276,6 +278,7 @@ defmodule Team.Matcher.Group do
   end
 
   def begin_to_start(~M{%__MODULE__  all_role_ids,token} = state) do
+    IO.inspect("begin to start")
     map_id = Team.Matcher.random_map_id()
 
     with {:ok, room_id} <- Lobby.Svr.create_room([@room_type_match, all_role_ids, map_id, token]) do
