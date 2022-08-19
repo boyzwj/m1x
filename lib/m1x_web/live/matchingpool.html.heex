@@ -1,25 +1,25 @@
-<.container max_width="full">
-<h1>游戏模式：</h1>
+<.container max_width="full" margin="auto">
 
+
+
+</.container>
+
+<.container max_width="full">
+<%= if @role_add_modal == false do %>
+      <%= _f = form_for :foo, "#", phx_submit: "show_role_modal" %>
+<% end %>
+<.button color="primary" label="添加" />
+</.container>
+
+
+
+<.container max_width="full">
 <.tabs>
+<.h3>匹配池：</.h3>
     <%= for game_mode <- @game_modes do %>
     <.tab is_active={@active_mode == game_mode} link_type="live_patch" to={"/matchingpool?game_mode=#{game_mode}"}><%= game_mode %> </.tab>
     <% end %>
 </.tabs>
-
-</.container>
-
-<.container max_width="md">
-<%= if @role_add_modal == false do %>
-      <%= _f = form_for :foo, "#", phx_submit: "show_role_modal" %>
-<% end %>
-        <.button color="primary" label="添加" />
-</.container>
-
-
-
-<.container max_width="full">
-<h1>匹配池：</h1>
 <.table>
     <.tr>
         <.th>匹配池基础id</.th>
@@ -42,7 +42,7 @@
 
 
 <.container max_width="full">
-<h1>GROUP：</h1>
+<.h3>GROUP：</.h3>
 <.table>
     <.tr>
         <.th>匹配池基础id</.th>
