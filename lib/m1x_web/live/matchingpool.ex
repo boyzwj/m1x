@@ -9,9 +9,9 @@ defmodule M1xWeb.Matchingpool do
 
     schema "add_role" do
       field :mode, :integer
-      field :team_id, :integer, default: 0
+      field :team_id, :integer
       field :role_ids, {:array, :integer}
-      field :avg_elo, :integer, default: 0
+      field :avg_elo, :integer
       field :warm, :boolean
     end
 
@@ -27,8 +27,24 @@ defmodule M1xWeb.Matchingpool do
       |> cast(params, [:mode, :team_id, :role_ids, :avg_elo, :warm])
       |> validate_required([:mode, :team_id, :role_ids, :avg_elo, :warm])
       |> validate_number(:mode, greater_than: 0)
-      |> validate_number(:team_id, greater_than: 1)
-      |> validate_number(:avg_elo, greater_than: 10000)
+      |> validate_number(:team_id, greater_than: 0)
+      |> validate_number(:avg_elo, greater_than: 0)
+      |> validate_elo()
+    end
+
+    def validate_elo(changeset) do
+      with ~M{avg_elo} <- changeset.changes,
+           true <-
+             Team.Matcher.Pool.get_base_id_by_elo(avg_elo) != nil ||
+               {:error, "avg_elo not in range"} do
+        changeset
+      else
+        {:error, msg} ->
+          add_error(changeset, :avg_elo, msg)
+
+        _ ->
+          changeset
+      end
     end
   end
 
@@ -89,6 +105,7 @@ defmodule M1xWeb.Matchingpool do
 
       socket
       |> put_flash(:info, "添加成功")
+      |> assign(:role_add_modal, false)
       |> then(&{:noreply, &1})
     else
       %Ecto.Changeset{errors: errors} ->
@@ -170,3 +187,4 @@ end
 ## <%= textarea f, :role_ids %>
 ## <%= error_tag f, :role_ids %>
 ## </div>
+# %{"avg_elo" => "0","mode" => "1001","role_ids" => "","team_id" => "1","warm" => "true"}
