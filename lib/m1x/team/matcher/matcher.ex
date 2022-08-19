@@ -13,10 +13,24 @@ defmodule Team.Matcher do
   @type_mix 3
   @type_warm 4
 
-  def init(_mode_args) do
+  def init([mode | _]) do
+    Logger.debug("start matcher , mode: #{mode}")
     Process.send_after(self(), :loop, @loop_interval)
     pool_ids = init_pool()
+    Process.put({__MODULE__, :mode}, mode)
     %Team.Matcher{pool_ids: pool_ids, now: Util.unixtime(), team_ids: MapSet.new()}
+  end
+
+  @spec random_map_id :: integer()
+  def random_map_id() do
+    mode = Process.get({__MODULE__, :mode})
+    random_map_by_mode(mode)
+  end
+
+  defp random_map_by_mode(mode) do
+    Data.GameModeMap.query(&(&1.mode_id == mode))
+    |> Enum.random()
+    |> Map.get(:id)
   end
 
   def init_pool() do

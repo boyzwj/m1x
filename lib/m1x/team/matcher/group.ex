@@ -25,6 +25,9 @@ defmodule Team.Matcher.Group do
 
   @side_max 5
 
+  @room_type_free 1
+  @room_type_match 2
+
   def new(pool_id, ~M{member_num} = team_info) do
     {type, base_id} = pool_id
     %__MODULE__{base_id: base_id, type: type, side1: [team_info], side1_num: member_num}
@@ -258,8 +261,32 @@ defmodule Team.Matcher.Group do
     IO.inspect(state)
   end
 
-  defp check_all_ready(~M{%__MODULE__ } = state) do
-    state
+  defp check_all_ready(~M{%__MODULE__ all_role_ids, infos} = state) do
+    ready_ids =
+      for {_pos, ~M{ready_state,role_id}} when ready_state == @rep_accept <- infos,
+          into: MapSet.new() do
+        role_id
+      end
+
+    if all_role_ids |> Enum.all?(&MapSet.member?(ready_ids, &1)) do
+      begin_to_start(state)
+    else
+      state
+    end
+  end
+
+  def begin_to_start(~M{%__MODULE__  all_role_ids,token} = state) do
+    map_id = Team.Matcher.random_map_id()
+
+    with {:ok, room_id} <- Lobby.Svr.create_room([@room_type_match, all_role_ids, map_id, token]) do
+      role_id = List.first(all_role_ids)
+      Lobby.Room.Svr.start_game(room_id, role_id)
+      state
+    else
+      error ->
+        Logger.error("start match room error : #{inspect(error)}")
+        state
+    end
   end
 
   def set(~M{%__MODULE__  token} = state) do
