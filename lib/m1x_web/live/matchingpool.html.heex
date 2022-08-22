@@ -84,7 +84,7 @@
         <.form_field label = "游戏模式" type="select" options={@game_modes} form={f} field={:mode} />
         <.form_field label = "队伍id" type="text_input" form={f} field={:team_id} />
         <.form_field label = "角色id列表" type="textarea" form={f} field={:role_ids} />
-        <.form_field label = "平均elo" type="text_input" form={f} field={:avg_elo} />
+        <.form_field label = "平均elo" type="text_input" form={f} field={:avg_elo} phx_debounce="1000" autocomplete="off"/>
         <.form_field label = "warm" type="select" options={["否": false,"是": true]} form={f} field={:warm} />
         <div class="flex justify-end">
             <.button
