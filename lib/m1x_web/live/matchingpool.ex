@@ -30,7 +30,8 @@ defmodule M1xWeb.Matchingpool do
       |> validate_number(:mode, greater_than: 0)
       |> validate_number(:team_id, greater_than: 0)
       |> validate_number(:avg_elo, greater_than: elo_min)
-      |> validate_elo()
+
+      # |> validate_elo()
     end
 
     def validate_elo(changeset) do
