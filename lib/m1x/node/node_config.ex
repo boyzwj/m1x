@@ -93,6 +93,14 @@ defmodule NodeConfig do
           members: :auto
         ]
       },
+      {Horde.Registry, [name: Matrix.RankRegistry, keys: :unique, members: :auto]},
+      {Horde.DynamicSupervisor,
+       [name: Matrix.RankSupervisor, strategy: :one_for_one, members: :auto]},
+      {Rank.Sup, []},
+      {Horde.Registry, [name: Matrix.MailRegistry, keys: :unique, members: :auto]},
+      {Horde.DynamicSupervisor,
+       [name: Matrix.MailSupervisor, strategy: :one_for_one, members: :auto]},
+      {Mail.Manager, []},
       {Role.Sup, []},
       {Redis.Manager, []},
       {Lobby.Sup, []},
