@@ -6,15 +6,7 @@ defmodule Role.Mod.Friend do
     # TODO friend_ids
     friend_ids = get_friend_ids()
 
-    friends =
-      for role_id <- friend_ids do
-        {_, ~M{%Pbm.Common.RoleInfo role_name,gender,head_id,avatar_id,level,rank}} =
-          Role.Mod.Role.role_info(role_id)
-
-        ~M{%Pbm.Friend.FriendInfo role_id,role_name,gender,head_id,avatar_id,level,rank}
-      end
-
-    ~M{%Pbm.Friend.Info2C friends} |> sd()
+    ~M{%Pbm.Friend.Info2C friend_ids} |> sd()
     {:ok, state}
   end
 
