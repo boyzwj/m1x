@@ -62,6 +62,8 @@ defmodule M1xWeb.Matchingpool do
     |> assign(:active_mode, game_modes |> hd)
     |> assign(:role_add_modal, false)
     |> assign(:changeset, AddRole.changeset(%AddRole{}, %{}))
+    |> assign(:loading, false)
+    |> assign(:pool_search, "")
     |> then(&{:ok, &1})
   end
 
@@ -140,6 +142,44 @@ defmodule M1xWeb.Matchingpool do
     {:noreply, socket}
   end
 
+  def handle_event("type-search", %{"type_search" => pool_search}, socket) do
+    send(self(), {:run_pool_search, pool_search})
+
+    socket =
+      assign(socket,
+        pool_search: pool_search,
+        pool_infos: [],
+        loading: true
+      )
+
+    {:noreply, socket}
+  end
+
+  def handle_info(
+        {:run_pool_search, pool_search},
+        %Socket{assigns: %{active_mode: active_mode}} = socket
+      ) do
+    socket =
+      case list_pool_infos(active_mode, pool_search) do
+        [] ->
+          socket
+          |> put_flash(:info, "No pool info matching \"#{pool_search}\"")
+          |> assign(pool_infos: [], loading: false)
+
+        infos ->
+          infos =
+            infos
+            |> Enum.filter(fn ~M{%Team.Matcher.Pool type} ->
+              "#{type}" == pool_search
+            end)
+
+          socket
+          |> assign(pool_infos: infos, loading: false)
+      end
+
+    {:noreply, socket}
+  end
+
   def handle_info(:tick, socket) do
     # Logger.debug("fuckoff")
     socket
@@ -148,20 +188,31 @@ defmodule M1xWeb.Matchingpool do
     |> then(&{:noreply, &1})
   end
 
-  def assign_pool_infos(%Socket{assigns: %{active_mode: active_mode}} = socket) do
-    pool_infos =
-      Team.Matcher.Svr.get_pool_infos(active_mode, [])
-      |> Enum.map(fn %Team.Matcher.Pool{team_list: team_list} = pool ->
-        team_list =
-          for {_, _, team_id} <- Discord.SortedSet.to_list(team_list) do
-            team_id
-          end
-          |> Jason.encode!()
-
-        ~M{pool|team_list}
-      end)
-
+  def assign_pool_infos(
+        %Socket{assigns: %{active_mode: active_mode, pool_search: pool_search}} = socket
+      ) do
+    pool_infos = list_pool_infos(active_mode, pool_search)
     socket |> assign(:pool_infos, pool_infos)
+  end
+
+  defp list_pool_infos(active_mode, "") do
+    Team.Matcher.Svr.get_pool_infos(active_mode, [])
+    |> Enum.map(fn %Team.Matcher.Pool{team_list: team_list} = pool ->
+      team_list =
+        for {_, _, team_id} <- Discord.SortedSet.to_list(team_list) do
+          team_id
+        end
+        |> Jason.encode!()
+
+      ~M{pool|team_list}
+    end)
+  end
+
+  defp list_pool_infos(active_mode, pool_search) do
+    list_pool_infos(active_mode, "")
+    |> Enum.filter(fn ~M{%Team.Matcher.Pool type} ->
+      "#{type}" == pool_search
+    end)
   end
 
   def assign_group_infos(%Socket{assigns: %{active_mode: active_mode}} = socket) do
