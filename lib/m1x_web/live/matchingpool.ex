@@ -31,6 +31,7 @@ defmodule M1xWeb.Matchingpool do
       |> validate_number(:team_id, greater_than: 0)
       |> validate_number(:avg_elo, greater_than: elo_min)
       |> validate_elo()
+      |> validate_role_ids()
     end
 
     def validate_elo(changeset) do
@@ -43,6 +44,18 @@ defmodule M1xWeb.Matchingpool do
         {:error, msg} ->
           add_error(changeset, :avg_elo, msg)
 
+        _ ->
+          changeset
+      end
+    end
+
+    def validate_role_ids(%Ecto.Changeset{errors: errors} = changeset) do
+      with {"is invalid", [type: {:array, :integer}, validation: :cast]} <- errors[:role_ids] do
+        errors = Keyword.delete(errors, :role_ids)
+
+        ~M{changeset|errors}
+        |> add_error(:role_ids, "每一行一个角色id，且id为非0整数")
+      else
         _ ->
           changeset
       end
