@@ -24,7 +24,7 @@ defmodule Team.Matcher.Pool do
 
   def get_base_id_by_elo(elo_value) do
     Data.MatchScore.query(&(elo_value <= &1.elo_max && elo_value >= &1.elo_min))
-    |> List.first()
+    |> List.first(%{})
     |> Map.get(:elo_pot)
   end
 
