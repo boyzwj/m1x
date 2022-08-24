@@ -40,6 +40,7 @@ defmodule NodeConfig do
       {Horde.DynamicSupervisor,
        [name: Matrix.RankSupervisor, strategy: :one_for_one, members: :auto]},
       {Rank.Sup, []},
+      {Bot.Sup, []},
       {Horde.Registry, [name: Matrix.MailRegistry, keys: :unique, members: :auto]},
       {Horde.DynamicSupervisor,
        [name: Matrix.MailSupervisor, strategy: :one_for_one, members: :auto]},
@@ -100,6 +101,7 @@ defmodule NodeConfig do
       # {Api.Sup, []},
       {GateWay.ListenerSup, []},
       {Dc.Sup, []},
+      {Bot.Sup, []},
       {Team.Sup, []}
     ]
   end

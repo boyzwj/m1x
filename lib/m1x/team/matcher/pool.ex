@@ -55,6 +55,7 @@ defmodule Team.Matcher.Pool do
     team_list
     |> SortedSet.to_list()
     |> do_scan(id)
+    |> join_robot()
     |> check_start()
 
     state
@@ -117,5 +118,9 @@ defmodule Team.Matcher.Pool do
 
   defp check_start(groups) do
     groups |> Enum.each(&Group.check_start(&1))
+  end
+
+  defp join_robot(group) do
+    group
   end
 end

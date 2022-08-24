@@ -1,5 +1,5 @@
 defmodule Data.Character do
-	## SOURCE:"xls\J角色表.xlsx" SHEET:"Sheet1"
+	## SOURCE:"xls\J角色表.xlsx" SHEET:"角色表"
 
 	def ids() do
 		[100010001, 100020001]

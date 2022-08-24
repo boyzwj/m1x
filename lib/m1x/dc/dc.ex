@@ -20,8 +20,10 @@ defmodule Dc do
 
       infos =
         for {_k, v} <- members, into: %{} do
-          {_, ~M{%Pbm.Common.RoleInfo role_name,level,avatar_id}} = Role.Mod.Role.role_info(v)
-          {v, ~M{%Dc.RoleInfo role_name,level,avatar_id}}
+          {_, ~M{%Pbm.Common.RoleInfo role_name,robot,robot_type,level,avatar_id}} =
+            Role.Mod.Role.role_info(v)
+
+          {v, ~M{%Dc.RoleInfo role_name,robot,robot_type,level,avatar_id}}
         end
 
       Dc.Client.send2dsa(from, %Dc.StartGame2C{

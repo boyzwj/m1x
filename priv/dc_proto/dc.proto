@@ -8,8 +8,10 @@ syntax = "proto3";
 
   message RoleInfo{
     string role_name = 1;
-    uint32 level = 2;
-    uint32 avatar_id = 3;
+    uint32 robot = 2;
+    uint32 robot_type = 3;
+    uint32 level = 4;
+    uint32 avatar_id = 5;
   }
 
   message StartGame2C{

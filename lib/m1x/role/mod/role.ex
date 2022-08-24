@@ -47,9 +47,16 @@ defmodule Role.Mod.Role do
   end
 
   defmemo role_info(role_id), expires_in: 86_400_000 do
-    data = load(role_id)
-    role_info = data && to_common(data)
     cachetime = Util.unixtime()
+
+    role_info =
+      if Bot.Manager.is_robot_id(role_id) do
+        Bot.Manager.get_info(role_id)
+      else
+        data = load(role_id)
+        data && to_common(data)
+      end
+
     {cachetime, role_info}
   end
 
