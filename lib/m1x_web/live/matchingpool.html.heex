@@ -3,38 +3,39 @@
 
 
 
-<.container max_width="full" class="flex justify-start">
-<form id="show_role_modal" phx-submit="show_role_modal">
-<.button type="submit" color="primary" label="添加" />
-</form>
-
-</.container>
-
 
 <.container max_width="full">
-
-<.h3 underline label="游戏模式：" />
-<.tabs class="bg-green-100">
-<div class="flex justify-end">
-    <%= for game_mode <- @game_modes do %>
-    <.tab class="border m-2" is_active={@active_mode == game_mode} link_type="live_patch" to={"/matchingpool?game_mode=#{game_mode}"}><%= game_mode %> </.tab>
-    <% end %>
-</div>
-
-</.tabs>
-
-
-<.h5 label="" />
-    <.h3 label="匹配池：" />
-
-    <div id="search">
-        <form id="type-search" phx-submit="type-search">
-        <input type="text" name="type_search" value={"#{@pool_search}"}
-                placeholder="type"
-                autofocus autocomplete="off" class="border" />
-        <.icon_button  type="submit" size="md" icon={:search}/>
+<div class="flex justify-between">
+    <div id="add-role" class="mt-6" >
+        <form id="show_role_modal" phx-submit="show_role_modal">
+        <.button type="submit" color="primary" label="添加" />
         </form>
     </div>
+
+
+    <div id="mode-select" class="mt-4"> 
+    
+        <.tabs class="bg-green-50">
+        <div class="flex ">
+            <%= for game_mode <- @game_modes do %>
+            <.tab class="border m-2" is_active={@active_mode == game_mode} link_type="live_patch" to={"/matchingpool?game_mode=#{game_mode}"}><%= game_mode %> </.tab>
+            <% end %>
+        </div>
+        </.tabs>
+
+    </div>
+        
+    <div id="search-type" class="mt-6 ">
+        <form id="type-search" phx-submit="type-search" class="flex">
+            <input type="text" name="type_search" value={"#{@pool_search}"}
+                    placeholder="队伍类型"
+                    autofocus autocomplete="off" class="border  w-24" />
+            <.icon_button  type="submit" size="md" icon={:search}/>
+        </form>
+    </div>
+
+  
+</div>
 
 <.h5 underline label="" />
 <.table>
