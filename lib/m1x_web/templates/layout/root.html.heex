@@ -10,8 +10,8 @@
     <script defer phx-track-static type="text/javascript" src={Routes.static_path(@conn, "/assets/app.js")}></script>
   </head>
   <body>
-    <header>
-      <.container max_width="full" class= "p-4 bg-indigo-900">
+    <header class="relative">
+      <.container max_width="full" class= "z-40 p-4 bg-indigo-900 fixed top-0 left-0 right-0">
               <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
               <.button to={ Routes.live_dashboard_path(@conn, :home)} link_type="a" color="secondary" label="System Dashboard" />
             <% end %>
@@ -20,11 +20,17 @@
             <div class="absolute top-4 right-4 h-16 w-16 ...">   <.button to="/" link_type="live_redirect" color="primary" label="主页"/></div>
       </.container>
     </header>
+
+    <.container max_width="full" class="absolute mt-12 z-0">
       <%= @inner_content %>
-      <footer class="bg-indigo-900 mt-auto py-3">
-      <div class="container pb-4 max-w-4xl mx-auto text-center text-gray-300 text-sm">
-        &copy; <%= DateTime.utc_now.year %> Illusion Colors
-      </div>
+      <div class=" mt-24"></div>
+    </.container>
+    <footer class="relative">
+      <.container max_width="full" class="z-40 p-4  bg-indigo-900 fixed bottom-0 left-0 right-0">
+        <div class="max-w-4xl mx-auto text-center text-gray-300 text-sm">
+          &copy; <%= DateTime.utc_now.year %> Illusion Colors
+        </div>
+      </.container>
     </footer>
   </body>
 </html>

@@ -62,6 +62,7 @@ defmodule M1xWeb.Matchingpool do
     end
   end
 
+  @team_type [所有: "0", 个人: "1", 队伍: "2", 混合: "3", 温暖: "4"]
   def mount(_params, _session, socket) do
     if connected?(socket) do
       :timer.send_interval(2000, self(), :tick)
@@ -76,7 +77,9 @@ defmodule M1xWeb.Matchingpool do
     |> assign(:role_add_modal, false)
     |> assign(:changeset, AddRole.changeset(%AddRole{}, %{}))
     |> assign(:loading, false)
-    |> assign(:pool_search, "")
+    |> assign(:search_team_id, "")
+    |> assign(:search_team_type, "0")
+    |> assign(:team_type, @team_type)
     |> then(&{:ok, &1})
   end
 
@@ -155,12 +158,17 @@ defmodule M1xWeb.Matchingpool do
     {:noreply, socket}
   end
 
-  def handle_event("type-search", %{"type_search" => pool_search}, socket) do
-    send(self(), {:run_pool_search, pool_search})
+  def handle_event(
+        "pool-search",
+        %{"pool_search" => %{"team_id" => search_team_id, "team_type" => search_team_type}},
+        socket
+      ) do
+    send(self(), :run_pool_search)
 
     socket =
       assign(socket,
-        pool_search: pool_search,
+        search_team_id: search_team_id,
+        search_team_type: search_team_type,
         pool_infos: [],
         loading: true
       )
@@ -169,23 +177,31 @@ defmodule M1xWeb.Matchingpool do
   end
 
   def handle_info(
-        {:run_pool_search, pool_search},
-        %Socket{assigns: %{active_mode: active_mode}} = socket
+        :run_pool_search,
+        %Socket{
+          assigns: %{
+            active_mode: active_mode,
+            search_team_id: search_team_id,
+            search_team_type: search_team_type
+          }
+        } = socket
       ) do
+    pool_infos =
+      list_pool_infos(active_mode)
+      |> filter_by_team_id(search_team_id)
+      |> filter_by_team_type(search_team_type)
+
     socket =
-      case list_pool_infos(active_mode, pool_search) do
+      case pool_infos do
         [] ->
           socket
-          |> put_flash(:info, "No pool info matching \"#{pool_search}\"")
+          |> put_flash(
+            :info,
+            "没有找到队伍类型=`#{humanize_team_type(search_team_type)}`,队伍ID=`#{search_team_id}`的数据"
+          )
           |> assign(pool_infos: [], loading: false)
 
         infos ->
-          infos =
-            infos
-            |> Enum.filter(fn ~M{%Team.Matcher.Pool type} ->
-              "#{type}" == pool_search
-            end)
-
           socket
           |> assign(pool_infos: infos, loading: false)
       end
@@ -202,29 +218,52 @@ defmodule M1xWeb.Matchingpool do
   end
 
   def assign_pool_infos(
-        %Socket{assigns: %{active_mode: active_mode, pool_search: pool_search}} = socket
+        %Socket{
+          assigns: %{
+            active_mode: active_mode,
+            search_team_id: search_team_id,
+            search_team_type: search_team_type
+          }
+        } = socket
       ) do
-    pool_infos = list_pool_infos(active_mode, pool_search)
+    pool_infos =
+      list_pool_infos(active_mode)
+      |> filter_by_team_id(search_team_id)
+      |> filter_by_team_type(search_team_type)
+
     socket |> assign(:pool_infos, pool_infos)
   end
 
-  defp list_pool_infos(active_mode, "") do
+  defp filter_by_team_id(infos, ""), do: infos
+
+  defp filter_by_team_id(infos, team_id) when is_binary(team_id),
+    do: filter_by_team_id(infos, String.to_integer(team_id))
+
+  defp filter_by_team_id(infos, team_id) when is_integer(team_id) do
+    infos
+    |> Enum.filter(fn ~M{%Team.Matcher.Pool team_list} ->
+      Enum.member?(team_list, team_id)
+    end)
+  end
+
+  defp filter_by_team_type(infos, "0"), do: infos
+
+  defp filter_by_team_type(infos, team_type) do
+    infos
+    |> Enum.filter(fn ~M{%Team.Matcher.Pool type} ->
+      "#{type}" == team_type
+    end)
+  end
+
+  defp list_pool_infos(active_mode) do
     Team.Matcher.Svr.get_pool_infos(active_mode, [])
     |> Enum.map(fn %Team.Matcher.Pool{team_list: team_list} = pool ->
       team_list =
         for {_, _, team_id} <- Discord.SortedSet.to_list(team_list) do
           team_id
         end
-        |> Jason.encode!()
 
       ~M{pool|team_list}
-    end)
-  end
-
-  defp list_pool_infos(active_mode, pool_search) do
-    list_pool_infos(active_mode, "")
-    |> Enum.filter(fn ~M{%Team.Matcher.Pool type} ->
-      "#{type}" == pool_search
     end)
   end
 
@@ -246,5 +285,16 @@ defmodule M1xWeb.Matchingpool do
       end)
 
     socket |> assign(:group_infos, group_infos)
+  end
+
+  defp humanize_team_type(team_id) when is_binary(team_id),
+    do: String.to_integer(team_id) |> humanize_team_type()
+
+  defp humanize_team_type(team_id) when is_integer(team_id) do
+    Enum.find(@team_type, {team_id, team_id}, &(elem(&1, 1) == "#{team_id}")) |> elem(0)
+  end
+
+  defp humanize_team_ids(team_ids) do
+    Poison.encode!(team_ids)
   end
 end
