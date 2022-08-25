@@ -4,7 +4,7 @@ package pbm.common;
 message RoleInfo{
     uint64 role_id = 1;   //角色ID
     uint32 robot = 2;      // 0 玩家 |1 机器人
-    uint32 robot_type=3; // 1-Robot房间创建 2-FakeMan匹配添加 3-局内NPC
+    uint32 robot_type = 3; // 1-Robot房间创建 2-FakeMan匹配添加 3-局内NPC
     string role_name = 4; //角色昵称
     uint32 gender = 5;    //性别
     uint32 head_id = 6;   //头像ID

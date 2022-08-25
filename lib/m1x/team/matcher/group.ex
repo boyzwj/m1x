@@ -28,6 +28,10 @@ defmodule Team.Matcher.Group do
   @room_type_free 1
   @room_type_match 2
 
+  @robot_type_room 1
+  @robot_type_fakeman 2
+  @robot_type_npc 3
+
   def new(pool_id, ~M{member_num} = team_info) do
     {type, base_id} = pool_id
     %__MODULE__{base_id: base_id, type: type, side1: [team_info], side1_num: member_num}
@@ -182,7 +186,14 @@ defmodule Team.Matcher.Group do
     infos =
       all_role_ids
       |> Enum.zip_with(0..9, fn role_id, pos ->
-        {pos, %Pbm.Team.PositionInfo{role_id: role_id, ready_state: @rep_unready}}
+        read_state =
+          if Bot.Manager.is_robot_id(role_id) do
+            @rep_accept
+          else
+            @rep_unready
+          end
+
+        {pos, %Pbm.Team.PositionInfo{role_id: role_id, ready_state: read_state}}
       end)
       |> Enum.into(%{})
 
@@ -290,6 +301,45 @@ defmodule Team.Matcher.Group do
       error ->
         Logger.error("start match room error : #{inspect(error)}")
         state
+    end
+  end
+
+  def join_robot(~M{%__MODULE__ side1,side2,base_id, type} = state) do
+    ~M{multiplayer_bot,single_bot,ai_id} = Data.MatchPool.get(base_id)
+    now = Util.unixtime()
+
+    cond do
+      ai_id > 0 && type == @type_single ->
+        if (side1 ++ side2) |> Enum.any?(&(now - &1.match_time >= single_bot)) do
+          do_join_robot(state)
+        else
+          state
+        end
+
+      ai_id > 0 ->
+        if (side1 ++ side2) |> Enum.any?(&(now - &1.match_time >= multiplayer_bot)) do
+          do_join_robot(state)
+        else
+          state
+        end
+
+      true ->
+        state
+    end
+  end
+
+  defp do_join_robot(~M{%__MODULE__ side1,side1_num,side2,side2_num} = state) do
+    need_num = @side_max * 2 - (side1_num + side2_num)
+
+    if need_num > 0 do
+      bot_ids = Bot.Manager.random_bot_by_type(@robot_type_fakeman, need_num)
+      side1_need = @side_max - side1_num
+      {side1_bots, side2_bots} = Enum.split(bot_ids, side1_need)
+      side1 = [%MTeam{role_ids: side1_bots, member_num: length(side1_bots)} | side1]
+      side2 = [%MTeam{role_ids: side2_bots, member_num: length(side2_bots)} | side2]
+      ~M{state | side1,side2,side1_num: @side_max,side2_num: @side_max}
+    else
+      state
     end
   end
 

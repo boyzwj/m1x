@@ -120,7 +120,7 @@ defmodule Team.Matcher.Pool do
     groups |> Enum.each(&Group.check_start(&1))
   end
 
-  defp join_robot(group) do
-    group
+  defp join_robot(groups) do
+    groups |> Enum.map(&Group.join_robot(&1))
   end
 end
