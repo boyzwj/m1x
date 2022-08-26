@@ -272,6 +272,16 @@ defmodule M1xWeb.Matchingpool do
       Team.Matcher.Svr.get_group_infos(active_mode, [])
       |> Enum.map(fn %Team.Matcher.Group{side1: side1, side2: side2, all_role_ids: all_role_ids} =
                        group ->
+        side1_avg_elo =
+          Enum.map(side1, & &1.avg_elo)
+          |> Enum.sum()
+          |> Kernel./(length(side1))
+
+        side2_avg_elo =
+          Enum.map(side2, & &1.avg_elo)
+          |> Enum.sum()
+          |> Kernel./(length(side2))
+
         side1 =
           Enum.map(side1, & &1.team_id)
           |> Jason.encode!()
@@ -281,7 +291,10 @@ defmodule M1xWeb.Matchingpool do
           |> Jason.encode!()
 
         all_role_ids = all_role_ids |> Jason.encode!()
+
         ~M{group|side1,side2,all_role_ids}
+        |> Map.put(:side1_avg_elo, side1_avg_elo)
+        |> Map.put(:side2_avg_elo, side2_avg_elo)
       end)
 
     socket |> assign(:group_infos, group_infos)

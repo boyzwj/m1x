@@ -53,8 +53,10 @@
             <.th>队伍类型</.th>
             <.th>side1队伍ID列表</.th>
             <.th>side1玩家人数</.th>
+            <.th>side1平均elo</.th>
             <.th>side2队伍ID列表</.th>
             <.th>side2玩家人数</.th>
+            <.th>side2平均elo</.th>
             <.th>所有玩家ID</.th>
             <.th>匹配时间</.th>
         </.tr>
@@ -65,10 +67,12 @@
             <.td><%= group_info.type %></.td>
             <.td><%= group_info.side1 %></.td>
             <.td><%= group_info.side1_num %></.td>
+            <.td><%= group_info.side1_avg_elo %></.td>
             <.td><%= group_info.side2 %></.td>
             <.td><%= group_info.side2_num %></.td>
+            <.td><%= group_info.side2_avg_elo %></.td>
             <.td><%= group_info.all_role_ids %></.td>
-            <.td><%= group_info.match_time %></.td>
+            <.td><%= (group_info.match_time + 8*3600) |> DateTime.from_unix! |> DateTime.to_string %></.td>
         </.tr>
         <% end %>
 

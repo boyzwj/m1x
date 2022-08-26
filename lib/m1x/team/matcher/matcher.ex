@@ -165,23 +165,25 @@ defmodule Team.Matcher do
   end
 
   def test3() do
-    Team.Matcher.Svr.join(1002, [101, [1001], 1600, false])
-    Team.Matcher.Svr.join(1002, [102, [1002, 1003, 1004, 1005], 1670, false])
-    Team.Matcher.Svr.join(1002, [103, [1006], 1650, false])
-    Team.Matcher.Svr.join(1002, [104, [1007, 1008, 1009, 1100], 1500, false])
+    robot_ids = Bot.Manager.random_bot_by_type(2, 10)
+    Team.Matcher.Svr.join(1002, [101, Enum.slice(robot_ids, 0, 1), 1600, false])
+    Team.Matcher.Svr.join(1002, [102, Enum.slice(robot_ids, 1, 4), 1670, false])
+    Team.Matcher.Svr.join(1002, [103, Enum.slice(robot_ids, 5, 1), 1650, false])
+    Team.Matcher.Svr.join(1002, [104, Enum.slice(robot_ids, 6, 4), 1500, false])
   end
 
   def test_reply() do
-    Team.Matcher.Svr.ready_match(1002, [101, 1001, 1])
-    Team.Matcher.Svr.ready_match(1002, [102, 1002, 1])
-    Team.Matcher.Svr.ready_match(1002, [102, 1003, 1])
-    Team.Matcher.Svr.ready_match(1002, [102, 1004, 1])
-    Team.Matcher.Svr.ready_match(1002, [102, 1005, 1])
+    robot_ids = Bot.Manager.random_bot_by_type(2, 10)
+    Team.Matcher.Svr.ready_match(1002, [101, Enum.at(robot_ids, 0), 1])
+    Team.Matcher.Svr.ready_match(1002, [102, Enum.at(robot_ids, 1), 1])
+    Team.Matcher.Svr.ready_match(1002, [102, Enum.at(robot_ids, 2), 1])
+    Team.Matcher.Svr.ready_match(1002, [102, Enum.at(robot_ids, 3), 1])
+    Team.Matcher.Svr.ready_match(1002, [102, Enum.at(robot_ids, 4), 1])
 
-    Team.Matcher.Svr.ready_match(1002, [103, 1006, 1])
-    Team.Matcher.Svr.ready_match(1002, [104, 1007, 1])
-    Team.Matcher.Svr.ready_match(1002, [104, 1008, 1])
-    Team.Matcher.Svr.ready_match(1002, [104, 1009, 1])
-    Team.Matcher.Svr.ready_match(1002, [104, 1100, 1])
+    Team.Matcher.Svr.ready_match(1002, [103, Enum.at(robot_ids, 5), 1])
+    Team.Matcher.Svr.ready_match(1002, [104, Enum.at(robot_ids, 6), 1])
+    Team.Matcher.Svr.ready_match(1002, [104, Enum.at(robot_ids, 7), 1])
+    Team.Matcher.Svr.ready_match(1002, [104, Enum.at(robot_ids, 8), 1])
+    Team.Matcher.Svr.ready_match(1002, [104, Enum.at(robot_ids, 9), 1])
   end
 end
