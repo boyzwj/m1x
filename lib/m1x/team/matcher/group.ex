@@ -175,9 +175,11 @@ defmodule Team.Matcher.Group do
       for ~M{%MTeam team_id,role_ids} <- side1 ++ side2 do
         Logger.debug("set match : #{team_id}")
 
-        MTeam.get(team_id)
-        |> MTeam.set_match(token)
-        |> MTeam.set()
+        if team_id > 0 do
+          MTeam.get(team_id)
+          |> MTeam.set_match(token)
+          |> MTeam.set()
+        end
 
         role_ids
       end
