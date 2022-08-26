@@ -72,7 +72,7 @@
             <.td><%= group_info.side2_num %></.td>
             <.td><%= group_info.side2_avg_elo %></.td>
             <.td><%= group_info.all_role_ids %></.td>
-            <.td><%= (group_info.match_time + 8*3600) |> DateTime.from_unix! |> DateTime.to_string %></.td>
+            <.td id={"hook_match_time"} phx-hook="LocalTime"><%= group_info.match_time %></.td>
         </.tr>
         <% end %>
 
