@@ -7,9 +7,6 @@
 # General application configuration
 import Config
 
-config :m1x,
-  ecto_repos: [M1x.Repo]
-
 # Configures the endpoint
 config :m1x, M1xWeb.Endpoint,
   url: [host: "localhost"],

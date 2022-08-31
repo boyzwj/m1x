@@ -1,8 +1,5 @@
 import Config
 
-# Configure your database
-config :m1x, M1x.Repo, database: ".sqllite3/#{node()}/database.db"
-
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #

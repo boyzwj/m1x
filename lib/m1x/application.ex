@@ -10,8 +10,6 @@ defmodule M1x.Application do
     children =
       [
         %{id: :pg, start: {:pg, :start_link, []}},
-        # Start the Ecto repository
-        M1x.Repo,
         # Start the Telemetry supervisor
         M1xWeb.Telemetry,
         # Start the PubSub system
