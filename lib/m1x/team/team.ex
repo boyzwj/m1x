@@ -77,12 +77,62 @@ defmodule Team do
     avg_elo = get_avg_elo(state)
     Team.Matcher.Svr.join(mode, [team_id, Map.values(members), avg_elo, false])
     state = ~M{state| status: @status_matching} |> sync()
-    {{:ok, status}, state}
+    {{:ok, @status_matching}, state}
   end
 
   def ready_match(~M{%Team team_id,mode} = state, [role_id, reply]) do
     Team.Matcher.Svr.ready_match(mode, [team_id, role_id, reply])
     {:ok, state}
+  end
+
+  def cancel_match(~M{%Team team_id,mode,leader_id} = state, [role_id]) do
+    if role_id != leader_id do
+      throw("你不是队长")
+    end
+
+    Team.Matcher.Svr.cancel_match(mode, [team_id])
+    {:ok, state}
+  end
+
+  def match_ok(~M{%Team status} = state, []) do
+    if status == @status_matching do
+      ~M{state|status: @status_matched}
+      |> sync()
+    end
+
+    {:ok, state}
+  end
+
+  def begin_battle(~M{%Team status} = state, []) do
+    if status == @status_matched do
+      ~M{state|status: @status_battle}
+      |> sync()
+    end
+
+    {:ok, state}
+  end
+
+  def invite_into_team(~M{%Team members,status} = state, [role_id, invitor_id]) do
+    if status == @status_battle do
+      throw("队伍已在战斗中")
+    end
+
+    if state in [@status_matched, @status_matching] do
+      throw("队伍已在匹配中")
+    end
+
+    member_ids = Map.values(members)
+
+    if !Enum.member?(member_ids, invitor_id) do
+      throw("对方已离开该队伍")
+    end
+
+    if Enum.member?(member_ids, role_id) do
+      throw("你已在队伍中")
+    end
+
+    add_members(state, role_id) |> sync()
+    {{:ok, status}, state}
   end
 
   defp find_free_pos(state, poses \\ @positions)
@@ -119,7 +169,7 @@ defmodule Team do
 
   defp sync(~M{%Team team_id, leader_id,mode,members,status} = state) do
     info = ~M{%Pbm.Team.BaseInfo  team_id,leader_id,mode,members,status}
-    ~M{%Pbm.Team.Info2C info} |> broad_cast()
+    Role.Svr.excute_mod_fun(role_ids(), &Role.Mod.Team.on_sync/2, info)
     state
   end
 

@@ -10,6 +10,10 @@ defmodule Team.Matcher.Svr do
     call(mode, {:ready_match, args})
   end
 
+  def cancel_match(mode, args) do
+    call(mode, {:cancel_match, args})
+  end
+
   def get_pool_infos(mode, args) do
     call(mode, {:get_pool_infos, args})
   end
