@@ -128,11 +128,10 @@ defmodule Team do
     end
 
     if Enum.member?(member_ids, role_id) do
-      throw("你已在队伍中")
+      throw("已在队伍中")
     end
 
-    state = add_members(state, role_id) |> sync()
-    {{:ok, status}, state}
+    add_members(state, role_id) |> sync() |> ok()
   end
 
   defp find_free_pos(state, poses \\ @positions)

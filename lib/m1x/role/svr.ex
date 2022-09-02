@@ -58,8 +58,9 @@ defmodule Role.Svr do
   end
 
   def excute_mod_fun(role_ids, mod_fun, args) when is_list(role_ids) do
-    role_ids
-    |> Enum.each(&Process.send(pid(&1), {:callback_fun, mod_fun, args}, [:nosuspend]))
+    for role_id <- role_ids, is_pid(role_id) do
+      Process.send(pid(role_id), {:callback_fun, mod_fun, args}, [:nosuspend])
+    end
   end
 
   def exit(role_id) do

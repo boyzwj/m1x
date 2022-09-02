@@ -16,6 +16,11 @@ defmodule Team.Manager do
     GenServer.cast(__MODULE__, {func, args})
   end
 
+  def list_teams() do
+    {func, _} = __ENV__.function
+    GenServer.call(__MODULE__, {func, []})
+  end
+
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
@@ -105,6 +110,23 @@ defmodule Team.Manager do
   def recycle_team_id(state, team_id) do
     recycle_team_id(team_id)
     state |> ok()
+  end
+
+  def list_teams(state, []) do
+    {id_start, _pool} = Process.get({__MODULE__, :team_id_pool})
+
+    reply =
+      Enum.reduce(@id_start..id_start, [], fn team_id, acc ->
+        pid = Team.Svr.pid(team_id)
+
+        if is_pid(pid) do
+          [{team_id, pid} | acc]
+        else
+          acc
+        end
+      end)
+
+    {reply, state}
   end
 
   defp secondloop(state) do

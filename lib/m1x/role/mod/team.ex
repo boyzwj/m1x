@@ -135,16 +135,16 @@ defmodule Role.Mod.Team do
     end
 
     if old_team_id == team_id do
-      throw("你已在该队伍中")
+      throw("已在该队伍中")
     end
 
     if old_team_id != 0 do
-      throw("你已经在其他队伍")
+      throw("已经在其他队伍")
     end
 
-    with {:ok, status} <- Team.Svr.invite_into_team(team_id, [role_id, invitor_id]) do
+    with :ok <- Team.Svr.invite_into_team(team_id, [role_id, invitor_id]) do
       ~M{%Pbm.Team.InviteReply2C role_id,reply} |> Role.Misc.send_to(invitor_id)
-      {:ok, ~M{state|team_id,status}}
+      {:ok, ~M{state|team_id}}
     else
       {:error, error} ->
         throw(error)
