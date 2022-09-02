@@ -131,7 +131,7 @@ defmodule Team do
       throw("你已在队伍中")
     end
 
-    add_members(state, role_id) |> sync()
+    state = add_members(state, role_id) |> sync()
     {{:ok, status}, state}
   end
 
