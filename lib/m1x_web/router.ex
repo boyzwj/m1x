@@ -23,6 +23,7 @@ defmodule M1xWeb.Router do
     live "/roles", RolesLive
     live "/matchingpool", Matchingpool
     live "/modal", MailLive, :modal
+    live "/teams", TeamsLive
   end
 
   # Other scopes may use custom stacks.

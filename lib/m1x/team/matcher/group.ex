@@ -200,6 +200,10 @@ defmodule Team.Matcher.Group do
       |> Enum.into(%{})
 
     %Pbm.Team.ReadyMatch2C{infos: infos} |> broad_cast(all_role_ids)
+
+    Enum.map(side1, &Team.Svr.match_ok(&1.team_id, []))
+    Enum.map(side2, &Team.Svr.match_ok(&1.team_id, []))
+
     Logger.debug("do start #{inspect(state)}")
     match_time = Util.unixtime()
     ~M{state| token,match_time,infos,all_role_ids} |> add_waiting_list()
@@ -291,13 +295,15 @@ defmodule Team.Matcher.Group do
     end
   end
 
-  def begin_to_start(~M{%__MODULE__  all_role_ids,token} = state) do
+  def begin_to_start(~M{%__MODULE__  all_role_ids,token,side1,side2} = state) do
     IO.inspect("begin to start")
     map_id = Team.Matcher.random_map_id()
 
     with {:ok, room_id} <- Lobby.Svr.create_room([@room_type_match, all_role_ids, map_id, token]) do
       role_id = List.first(all_role_ids)
       Lobby.Room.Svr.start_game(room_id, role_id)
+      Enum.map(side1, &Team.Svr.begin_battle(&1.team_id, []))
+      Enum.map(side2, &Team.Svr.begin_battle(&1.team_id, []))
       state
     else
       error ->

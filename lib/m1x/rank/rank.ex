@@ -9,6 +9,8 @@ defmodule Rank do
       @is_global unquote(opts[:is_global])
       @capacity unquote(opts[:capacity] || 500)
       @bucket_size unquote(opts[:bucket_size] || 500)
+      # TODO need implement
+      @limit unquote(opts[:limit] || 100_000)
 
       @type rank_item :: {non_neg_integer(), non_neg_integer()}
       @dump_interval 60 * 5 * 1000
@@ -38,6 +40,12 @@ defmodule Rank do
       @spec at(non_neg_integer()) :: rank_item
       def at(index) when index >= 0 do
         GenServer.call(via_tuple(@is_global), {:at, index})
+      end
+
+      # 清空排行榜
+      @spec clear() :: :ok
+      def clear() do
+        GenServer.call(via_tuple(@is_global), :clear)
       end
 
       # 获取指定范围的排名信息
@@ -146,6 +154,11 @@ defmodule Rank do
 
       def handle_call({:slice, {start, amount}}, _from, state) do
         {:reply, SortedSet.slice(state.set, start, amount), state}
+      end
+
+      def handle_call(:clear, _from, state) do
+        set = SortedSet.new(@capacity, @bucket_size)
+        {:reply, :ok, %__MODULE__{set: set}}
       end
 
       @impl true

@@ -36,10 +36,31 @@ defmodule Role.Svr do
     end)
   end
 
+  # 判断玩家在线
+  def alive?(role_id) do
+    :global.whereis_name(name(role_id))
+    |> is_pid()
+  end
+
   # 在角色进程执行模块回调函数
   def manifold_do_callback_fun(role_ids, mod_fun, args \\ []) do
     role_pids(role_ids)
     |> Manifold.send({:callback_fun, mod_fun, args})
+  end
+
+  # 在角色进程执行模块回调函数
+  def excute_mod_fun(role_id_or_ids, mod_fun) do
+    excute_mod_fun(role_id_or_ids, mod_fun, [])
+  end
+
+  def excute_mod_fun(role_id, mod_fun, args) when is_integer(role_id) do
+    excute_mod_fun([role_id], mod_fun, args)
+  end
+
+  def excute_mod_fun(role_ids, mod_fun, args) when is_list(role_ids) do
+    for role_id <- role_ids, is_pid(role_id) do
+      Process.send(pid(role_id), {:callback_fun, mod_fun, args}, [:nosuspend])
+    end
   end
 
   def exit(role_id) do

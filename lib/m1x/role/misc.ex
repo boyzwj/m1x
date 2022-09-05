@@ -68,4 +68,9 @@ defmodule Role.Misc do
     msg = %Pbm.System.Error2C{error_code: error_code, error_msg: error_msg}
     send_to(msg, sid())
   end
+
+  def sd_err(role_id, error_code, error_msg) do
+    msg = %Pbm.System.Error2C{error_code: error_code, error_msg: error_msg}
+    send_to(msg, role_id)
+  end
 end

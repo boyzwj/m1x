@@ -9,7 +9,6 @@ message BaseInfo{
     map<uint32,uint64> members=3; //队伍成员
     uint32 mode = 4;  //游戏模式\
     uint32 status = 5;  // 0空闲 1匹配中  2匹配成功 3战斗中
-    
 }
 
 
@@ -24,7 +23,6 @@ message Create2S{
     uint32 mode = 1; //游戏模式
 }
 
-
 message Create2C{
     uint64 team_id = 1; //队伍ID
     uint32 mode = 2;  //游戏模式
@@ -35,22 +33,24 @@ message ChangeMode2S{
     uint32 mode = 1;
 }
 
-
 message Invite2S{
     uint64 role_id = 1; //邀请玩家ID
 }
 
 message Invite2C{
-    uint64 role_id = 1; //邀请成功返回
+    uint64 role_id = 1; //邀请发送成功
 }
 
 message InviteRequest2C{
     uint64 invitor_id = 1; //邀请人ID
     uint32 mode = 2;    //游戏模式
+    uint64 team_id = 3; //队伍ID
 }
 
 message InviteReply2S{
     uint32 reply = 1; //邀请回复（0拒绝 | 1同意）
+    uint64 invitor_id = 2; //邀请人ID
+    uint64 team_id = 3; //队伍ID
 }
 
 message InviteReply2C{
@@ -87,7 +87,6 @@ message CancelMatch2S{
 message PositionInfo{
     uint64 role_id = 1;
     uint32 ready_state=2; //装备状态 (0未准备 | 1 准备)
- 
 }
 
 message ReadyMatch2C{
@@ -95,5 +94,5 @@ message ReadyMatch2C{
 }
 
 message ReadyMatch2S{
-    uint32 reply = 1; //邀请回复（0拒绝 | 1同意）
+    uint32 reply = 1; //准备回复（0拒绝 | 1同意）
 }

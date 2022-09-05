@@ -22,9 +22,24 @@ defmodule Team.Svr do
     cast(team_id, {func, args})
   end
 
+  def cancel_match(team_id, args) do
+    {func, _} = __ENV__.function
+    cast(team_id, {func, args})
+  end
+
   def match_ok(team_id, args) do
     {func, _} = __ENV__.function
     cast(team_id, {func, args})
+  end
+
+  def begin_battle(team_id, args) do
+    {func, _} = __ENV__.function
+    cast(team_id, {func, args})
+  end
+
+  def invite_into_team(team_id, args) do
+    {func, _} = __ENV__.function
+    call(team_id, {func, args})
   end
 
   def name(team_id) do
