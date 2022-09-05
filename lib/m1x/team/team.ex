@@ -33,7 +33,7 @@ defmodule Team do
     |> ok()
   end
 
-  def exit_team(~M{%Team members,member_num,leader_id} = state, [role_id]) do
+  def exit_team(~M{%Team members,member_num,leader_id,team_id} = state, [role_id]) do
     if not :ordsets.is_element(role_id, role_ids()) do
       state |> ok()
     else
@@ -42,9 +42,9 @@ defmodule Team do
           {k, v}
         end
 
+      ~M{%Pbm.Team.Exit2C team_id,role_id} |> broad_cast()
       member_num = member_num - 1
       del_role_id(role_id)
-      ~M{%Pbm.Team.Exit2C role_id} |> broad_cast()
 
       leader_id =
         if role_id == leader_id do
