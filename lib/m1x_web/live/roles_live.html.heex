@@ -26,8 +26,8 @@
             <.td><%= info.rank %></.td>
             <.td><%= info.elo %></.td>
             <.td> 
-            <.button color="primary" class="bg-blue-500"  label="踢掉" phx-click="kick" value={info.role_id}/> 
-            <.button to={Routes.role_path(@socket,:edit,info.role_id)} link_type="live_redirect" color="primary" class="bg-blue-500"  label="编辑" />
+            <.button color="primary" class="bg-blue-500"  label="踢掉" phx-click="kick" value={info.role_id} size="xs"/> 
+            <.button to={Routes.role_path(@socket,:edit,info.role_id)} link_type="live_redirect" color="primary" class="bg-blue-500"  label="编辑" size="xs"/>
             </.td>
         </.tr>
         <% end%>

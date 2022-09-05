@@ -20,7 +20,7 @@
             <.td><%= Poison.encode!(team_info.members) %></.td>
             <.td><%= team_info.mode %></.td>
             <.td>
-                <.button phx-click="active_modal" phx-value-teamid={team_info.team_id} phx-value-leaderid={team_info.leader_id} color="primary" label="邀请" class="m-1"/>
+                <.button phx-click="active_modal" phx-value-teamid={team_info.team_id} phx-value-leaderid={team_info.leader_id} color="primary" label="邀请" class="m-1"  size="xs"/>
             </.td>
         </.tr>
         <% end %>
@@ -33,11 +33,9 @@
     <.form phx-submit="invite_roles" let={f} as={:invite_roles} for={%Ecto.Changeset{action: :update,data: %{},errors: []}} >
         <.form_field type="select"  form={f} layout={:row} field={:role_id}  label="可邀请的好友" options={@online_roles}  class="border h-10" />
         <div class="flex justify-end">
-            <.button type="submit" phx_disable_with="Saving..." label="发送" />
+            <.button type="submit" phx_disable_with="Saving..." label="发送"/>
         </div>            
     </.form>
  </.modal>
 </.container>
 <% end %>
-
-
