@@ -1,5 +1,5 @@
 <.container max_width="full" class="mt-10">
-    <.h3 underline label="队伍信息"/>
+    <.h3 underline label="队伍列表"/>
     <.table>
         <.tr>
             <.th>队伍ID</.th>
@@ -20,11 +20,7 @@
             <.td><%= Poison.encode!(team_info.members) %></.td>
             <.td><%= team_info.mode %></.td>
             <.td>
-                <.form phx-submit="active_modal" let={f} as={:active_modal} for={%Ecto.Changeset{action: :update,data: %{},errors: []}} >
-                    <.form_field type="text_input" form={f} field={:team_id} label="" class="hidden" value={"#{team_info.team_id}"}/>
-                    <.form_field type="text_input" form={f} field={:leader_id} label="" class="hidden" value={"#{team_info.leader_id}"}/>
-                        <.button type="submit" color="primary" label="邀请" class="m-1"/>
-                </.form>            
+                <.button phx-click="active_modal" phx-value-teamid={team_info.team_id} phx-value-leaderid={team_info.leader_id} color="primary" label="邀请" class="m-1"/>
             </.td>
         </.tr>
         <% end %>
@@ -32,7 +28,7 @@
     </.table>
 </.container>
 <%= if @active_modal == true do %>
-<.container max_width="full" class="mt-10">
+<.container max_width="full" class="mt-10" id="invite_modal">
  <.modal max_width="md" title="邀请其他人加入队伍">
     <.form phx-submit="invite_roles" let={f} as={:invite_roles} for={%Ecto.Changeset{action: :update,data: %{},errors: []}} >
         <.form_field type="select"  form={f} layout={:row} field={:role_id}  label="可邀请的好友" options={@online_roles}  class="border h-10" />

@@ -47,6 +47,7 @@ defmodule M1xWeb do
       use Phoenix.LiveView,
         layout: {M1xWeb.LayoutView, "live.html"}
 
+      alias Phoenix.LiveView.JS
       unquote(view_helpers())
     end
   end

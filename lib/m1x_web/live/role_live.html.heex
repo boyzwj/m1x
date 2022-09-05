@@ -1,0 +1,18 @@
+
+<.container max_width="md">
+    <.form let={f} for={@changeset} id="update_role" phx-submit="update_role" >
+        <.form_field label = "角色ID" type="text_input" form={f} field={:role_id} class="border" disabled="true"/>
+        <.form_field label = "账号" type="text_input" form={f} field={:account} class="border" disabled="true" />
+        <.form_field label = "名称" type="text_input" form={f} field={:role_name} phx_debounce="blur" autocomplete="off" class="border"/>
+        <.form_field label = "等级" type="text_input" form={f} field={:level} phx_debounce="blur" autocomplete="off" class="border"/>
+        <.form_field label = "性别" type="text_input" form={f} field={:gender} phx_debounce="blur" autocomplete="off" class="border"/>
+        <.form_field label = "头像ID" type="text_input" form={f} field={:head_id} phx_debounce="blur" autocomplete="off" class="border"/>
+        <.form_field label = "头衔ID" type="text_input" form={f} field={:avatar_id} phx_debounce="blur" autocomplete="off" class="border"/>
+        <.form_field label = "段位" type="text_input" form={f} field={:rank} phx_debounce="blur" autocomplete="off" class="border"/>
+        <.form_field label = "elo" type="text_input" form={f} field={:elo} phx_debounce="blur" autocomplete="off" class="border"/>
+        <%= if @live_action == :edit do %>
+            <.button color="primary" label="保存" />
+            <.button to={Routes.roles_path(@socket,:index)} link_type="live_redirect" color="primary" label="返回" />
+        <% end %>
+    </.form>
+</.container>

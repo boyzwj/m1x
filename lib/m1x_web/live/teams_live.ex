@@ -21,13 +21,11 @@ defmodule M1xWeb.TeamsLive do
     {:noreply, socket}
   end
 
-  def handle_event("active_modal", ~m{active_modal}, socket) do
-    ~m{team_id,leader_id} = active_modal
-
+  def handle_event("active_modal", ~m{teamid,leaderid}, socket) do
     socket
     |> assign(:active_modal, true)
-    |> assign(:cur_team_id, String.to_integer(team_id))
-    |> assign(:cur_leader_id, String.to_integer(leader_id))
+    |> assign(:cur_team_id, String.to_integer(teamid))
+    |> assign(:cur_leader_id, String.to_integer(leaderid))
     |> assign_role_infos()
     |> then(&{:noreply, &1})
   end

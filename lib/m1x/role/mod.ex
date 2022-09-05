@@ -117,7 +117,7 @@ defmodule Role.Mod do
 
       defp save(data) do
         with true <- dirty?(),
-             data <- Map.from_struct(data),
+             data <- Map.from_struct(data) |> Map.delete(:__meta__),
              v when is_integer(v) <- Redis.hset(dbkey(), __MODULE__, data) do
           set_dirty(false)
           true
