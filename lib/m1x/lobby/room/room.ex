@@ -18,6 +18,9 @@ defmodule Lobby.Room do
 
   @positions [0, 5, 1, 6, 2, 7, 3, 8, 4, 9, 10, 11, 12]
 
+  @room_type_free 1
+  @room_type_match 2
+
   def init([room_id, room_type, role_ids, map_id, password]) do
     owner_id = List.first(role_ids)
     Logger.debug("Room.Svr room_id: [#{room_id}] owenr_id: [#{owner_id}]  start")
@@ -187,9 +190,15 @@ defmodule Lobby.Room do
     end
   end
 
-  def ds_msg(state, ~M{%Pbm.Dsa.GameStatis2S battle_id, _battle_result} = msg) do
+  def ds_msg(~M{%M room_type} = state, ~M{%Pbm.Dsa.GameStatis2S battle_id, _battle_result} = msg) do
     Logger.debug("room receive ds msg #{inspect(msg)}")
     broad_cast(%Pbm.Battle.BattleResult2C{battle_id: battle_id})
+
+    if room_type == @room_type_match do
+      ## 匹配临时房间战斗结束关闭
+      self() |> Process.send(:shutdown, [:nosuspend])
+    end
+
     {:ok, state}
   end
 
