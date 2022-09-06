@@ -121,7 +121,7 @@ defmodule Role.Mod.Team do
       throw("被邀请者不在线")
     end
 
-    ~M{%Pbm.Team.InviteRequest2C invitor_id,mode} |> Role.Misc.send_to(role_id)
+    ~M{%Pbm.Team.InviteRequest2C invitor_id,mode,team_id} |> Role.Misc.send_to(role_id)
     ~M{%Pbm.Team.Invite2C role_id} |> sd()
     :ok
   end

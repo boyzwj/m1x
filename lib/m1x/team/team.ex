@@ -70,7 +70,7 @@ defmodule Team do
       throw("队伍还在另一场战斗中")
     end
 
-    if state in [@status_matched, @status_matching] do
+    if status in [@status_matched, @status_matching] do
       throw("队伍已在匹配中")
     end
 
@@ -117,7 +117,7 @@ defmodule Team do
       throw("队伍已在战斗中")
     end
 
-    if state in [@status_matched, @status_matching] do
+    if status in [@status_matched, @status_matching] do
       throw("队伍已在匹配中")
     end
 
@@ -191,7 +191,7 @@ defmodule Team do
 
   defp get_avg_elo(~M{%Team member_num}) do
     role_ids()
-    |> Enum.reduce(fn id, acc ->
+    |> Enum.reduce(0, fn id, acc ->
       with ~M{elo} <- Role.Mod.Role.load(id) do
         elo + acc
       else
