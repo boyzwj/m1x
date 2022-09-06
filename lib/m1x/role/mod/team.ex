@@ -18,6 +18,13 @@ defmodule Role.Mod.Team do
     |> sd()
   end
 
+  def on_offile(~M{%M team_id,role_id} = state) do
+    if team_id != 0 do
+      Team.Svr.exit_team(team_id, [role_id])
+      ~M{state|team_id: 0,status: 0,mode: 0} |> set_data()
+    end
+  end
+
   def h(~M{%M team_id} = _state, ~M{%Pbm.Team.Info2S }) do
     if team_id == 0 do
       info = %Pbm.Team.BaseInfo{team_id: 0}

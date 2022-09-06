@@ -11,7 +11,9 @@ defmodule Role.Mod.Friend do
   end
 
   def get_friend_ids() do
-    for pid <- :pg.get_members(Role.Svr) do
+    my = self()
+
+    for pid <- :pg.get_members(Role.Svr), pid != my do
       Role.Svr.get_data(pid, Role.Mod.Role)
       |> Map.get(:role_id)
     end
