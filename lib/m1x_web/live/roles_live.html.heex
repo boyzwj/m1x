@@ -1,6 +1,6 @@
-<.container max_width="full">
-    <.container max_width="full" class ="bg-gray-300 py-10">
-    <.table>
+<.container max_width="full" class ="mt-10">
+  <.h3 underline label="角色列表"/>
+  <.table>
     <thead>
         <.tr>
         <.th>RoleID</.th>
@@ -10,25 +10,29 @@
         <.th>头像</.th>
         <.th>等级</.th>
         <.th>段位</.th>
+        <.th>elo</.th>
         <.th>#</.th>
         </.tr>
     </thead>
     <tbody>
         <%= for info <- @player_infos do %>
-        <.tr><.td><%= info.role_id %></.td>
-        <.td><%= info.pid %></.td>
-        <.td><%= info.account %></.td>
-        <.td><%= info.role_name %></.td>
-        <.td><%= info.head_id %></.td>
-        <.td><%= info.level %></.td>        
-        <.td><%= info.rank %></.td>
-        <.td> <.button color="primary" class="bg-blue-500"  label="踢掉" phx-click="kick"  value={info.role_id} /> </.td></.tr>          
+        <.tr>
+            <.td><%= info.role_id %></.td>
+            <.td><%= info.pid %></.td>
+            <.td><%= info.account %></.td>
+            <.td><%= info.role_name %></.td>
+            <.td><%= info.head_id %></.td>
+            <.td><%= info.level %></.td>        
+            <.td><%= info.rank %></.td>
+            <.td><%= info.elo %></.td>
+            <.td> 
+            <.button color="primary" class="bg-blue-500"  label="踢掉" phx-click="kick" value={info.role_id} size="xs"/> 
+            <.button to={Routes.role_path(@socket,:edit,info.role_id)} link_type="live_redirect" color="primary" class="bg-blue-500"  label="编辑" size="xs"/>
+            </.td>
+        </.tr>
         <% end%>
     </tbody>
-    </.table>
+  </.table>
  </.container>
 
 
-
-
-</.container>

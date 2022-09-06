@@ -1,14 +1,49 @@
 defmodule Role.Mod.Role do
-  defstruct role_id: nil,
-            account: "",
-            role_name: "",
-            level: 1,
-            gender: 1,
-            head_id: 1,
-            avatar_id: 1,
-            rank: 0,
-            create_time: 0,
-            elo: 1000
+  use Ecto.Schema
+  import Ecto.Changeset
+
+  schema "role" do
+    field :role_id, :integer, default: nil
+    field :account, :string, default: ""
+    field :role_name, :string, default: ""
+    field :level, :integer, default: 1
+    field :gender, :integer, default: 1
+    field :head_id, :integer, default: 1
+    field :avatar_id, :integer, default: 1
+    field :rank, :integer, default: 0
+    field :create_time, :integer, default: 0
+    field :elo, :integer, default: 1000
+  end
+
+  def changeset(params), do: %__MODULE__{} |> changeset(params)
+
+  def changeset(struct, params) do
+    struct
+    |> cast(params, [
+      :role_id,
+      :account,
+      :role_name,
+      :level,
+      :gender,
+      :head_id,
+      :avatar_id,
+      :rank,
+      :create_time,
+      :elo
+    ])
+    |> validate_required([
+      :role_id,
+      :account,
+      :role_name,
+      :level,
+      :gender,
+      :head_id,
+      :avatar_id,
+      :rank,
+      :create_time,
+      :elo
+    ])
+  end
 
   use Role.Mod
   use Memoize

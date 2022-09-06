@@ -18,6 +18,13 @@ defmodule Role.Mod.Team do
     |> sd()
   end
 
+  def on_offline(~M{%M team_id,role_id} = state) do
+    if team_id != 0 do
+      Team.Svr.exit_team(team_id, [role_id])
+      ~M{state|team_id: 0,status: 0,mode: 0} |> set_data()
+    end
+  end
+
   def h(~M{%M team_id} = _state, ~M{%Pbm.Team.Info2S }) do
     if team_id == 0 do
       info = %Pbm.Team.BaseInfo{team_id: 0}
@@ -110,11 +117,11 @@ defmodule Role.Mod.Team do
       throw("队伍已在匹配中")
     end
 
-    if Role.Svr.alive?(role_id) do
+    if !Role.Svr.alive?(role_id) do
       throw("被邀请者不在线")
     end
 
-    ~M{%Pbm.Team.InviteRequest2C invitor_id,mode} |> Role.Misc.send_to(role_id)
+    ~M{%Pbm.Team.InviteRequest2C invitor_id,mode,team_id} |> Role.Misc.send_to(role_id)
     ~M{%Pbm.Team.Invite2C role_id} |> sd()
     :ok
   end
