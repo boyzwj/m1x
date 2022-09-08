@@ -76,4 +76,27 @@ if config_env() == :prod do
   #     config :swoosh, :api_client, Swoosh.ApiClient.Hackney
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
+
+
+  config :logger, backends: [:console, {LoggerFileBackend, :info}, {LoggerFileBackend, :error_log}]
+
+  config :logger, :info,
+    format: "### [$date $time] $metadata[$level] \n  * $levelpad$message\n\n",
+    metadata: [:module, :function, :line],
+    path: "/logs/info_#{System.get_env("RELEASE_NODE") || node()}_#{Date.utc_today()}.MD",
+    level: :info
+
+  config :logger, :error_log,
+    format: "### [$date $time] $metadata[$level] \n  * $levelpad$message\n\n",
+    metadata: [:module, :function, :line],
+    path: "/logs/error_#{System.get_env("RELEASE_NODE") || node()}_#{Date.utc_today()}.MD",
+    level: :error
+
+  config :logger, :console,
+    format: "### [$date $time] $metadata[$level] \n  * $levelpad$message\n\n",
+    metadata: [:module, :function, :line],
+    level: :debug
+
+
+
 end

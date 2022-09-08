@@ -47,24 +47,7 @@ config :m1x, M1xWeb.Endpoint, cache_static_manifest: "priv/static/cache_manifest
 #       force_ssl: [hsts: true]
 #
 # Check `Plug.SSL` for all available options in `force_ssl`.
-config :logger, backends: [:console, {LoggerFileBackend, :info}, {LoggerFileBackend, :error_log}]
 
-config :logger, :info,
-  format: "### [$date $time] $metadata[$level] \n  * $levelpad$message\n\n",
-  metadata: [:module, :function, :line],
-  path: "/logs/info_#{Date.utc_today()}.MD",
-  level: :info
-
-config :logger, :error_log,
-  format: "### [$date $time] $metadata[$level] \n  * $levelpad$message\n\n",
-  metadata: [:module, :function, :line],
-  path: "/logs/error_#{Date.utc_today()}.MD",
-  level: :error
-
-config :logger, :console,
-  format: "### [$date $time] $metadata[$level] \n  * $levelpad$message\n\n",
-  metadata: [:module, :function, :line],
-  level: :debug
 
 config :m1x,
   db_worker_num: 32,

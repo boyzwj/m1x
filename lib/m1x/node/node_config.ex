@@ -50,7 +50,7 @@ defmodule NodeConfig do
       {Lobby.Sup, []},
       {Dc.Sup, []},
       {Team.Sup, []},
-      {Dba.Mnesia.Sup ,[]}
+      # {Dba.Mnesia.Sup ,[]}
     ]
   end
 
@@ -112,7 +112,7 @@ defmodule NodeConfig do
       {Dc.Sup, []},
       {Bot.Sup, []},
       {Team.Sup, []},
-      {Dba.Mnesia.Sup ,[]}
+      # {Dba.Mnesia.Sup ,[]}
     ]
   end
 
