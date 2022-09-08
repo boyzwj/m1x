@@ -72,4 +72,13 @@ defmodule Robot.FSM do
     status = @status_online
     ~M{%Worker state| status}
   end
+
+  def sd(worker_id, msg) do
+    Robot.Worker.via_tuple(worker_id)
+    |> GenServer.cast({:handle, msg})
+  end
+
+  def h(%Worker{status: @status_online} = state, msg) do
+    Worker.send_buf(state, msg)
+  end
 end
