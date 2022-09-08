@@ -40,4 +40,6 @@ npm-debug.log
 
 .sqllite3
 
+.mnesia
+
 proto

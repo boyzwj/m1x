@@ -47,3 +47,6 @@ config :petal_components, :error_translator_function, {M1xWeb.ErrorHelpers, :tra
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
+
+config :mnesia,
+  dir: '.mnesia/#{Mix.env()}/#{node()}'
