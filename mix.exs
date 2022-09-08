@@ -71,7 +71,10 @@ defmodule M1x.MixProject do
       {:earmark, "~> 1.4"},
       {:memoize, "~> 1.4"},
       {:pockets, "~> 1.2"},
-      {:petal_components, "~> 0.17.6"}
+      {:petal_components, "~> 0.17.6"},
+      {:hut, "~> 1.4", manager: :rebar3, override: true},
+      {:memento, "~> 0.3.2"},
+      {:mnesia_rocksdb, git: "https://github.com/aeternity/mnesia_rocksdb.git", tag: "master"}
     ]
   end
 

@@ -10,11 +10,19 @@ defmodule Dba.Mnesia.Svr do
   def init(_args) do
     state = %{}
     # :mnesia.start()
-
+    Process.send_after(self(), :register, 1000)
     {:ok, state}
   end
 
   @impl true
+
+  def handle_info(:register, state) do
+    db_list = []
+    Dba.Mnesia.Manager.initialize(db_list)
+    {:noreply, state}
+  end
+
+
   def handle_info(msg, state) do
     Logger.warn("unhandle info : #{msg}")
     {:noreply, state}

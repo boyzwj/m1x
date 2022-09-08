@@ -7,7 +7,7 @@ defmodule Dba.Mnesia.Sup do
 
   @impl true
   def init(_opts) do
-    children = [{Mnesia.Svr, []}]
+    children = [{Dba.Mnesia.Svr, []}]
     Supervisor.init(children, strategy: :one_for_one)
   end
 end

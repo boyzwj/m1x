@@ -49,7 +49,8 @@ defmodule NodeConfig do
       {Redis.Manager, []},
       {Lobby.Sup, []},
       {Dc.Sup, []},
-      {Team.Sup, []}
+      {Team.Sup, []},
+      {Dba.Mnesia.Sup ,[]}
     ]
   end
 
@@ -110,7 +111,8 @@ defmodule NodeConfig do
       {GateWay.ListenerSup, []},
       {Dc.Sup, []},
       {Bot.Sup, []},
-      {Team.Sup, []}
+      {Team.Sup, []},
+      {Dba.Mnesia.Sup ,[]}
     ]
   end
 
