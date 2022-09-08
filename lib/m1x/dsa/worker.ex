@@ -199,6 +199,7 @@ defmodule Dsa.Worker do
   end
 
   defp send2ds(~M{%M socket,in_port} = state, msg) do
+    Logger.info("dsa send to ds : #{inspect(msg)}")
     :ok = :gen_udp.send(socket, {127, 0, 0, 1}, in_port, PB.encode!(msg))
     state
   end

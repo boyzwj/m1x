@@ -124,7 +124,6 @@ defmodule Dsa do
   end
 
   def send2dc(~M{%Dsa dc_socket} = state, msg) do
-    Logger.info("dsa send : #{inspect(msg)}")
     data = Dc.Pb.encode!(msg)
     len = IO.iodata_length(data)
     :ok = :gen_tcp.send(dc_socket, [<<len::16-little>> | data])
