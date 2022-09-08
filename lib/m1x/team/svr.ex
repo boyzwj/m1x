@@ -42,6 +42,26 @@ defmodule Team.Svr do
     call(team_id, {func, args})
   end
 
+  def get_team_info(team_id, args) do
+    {func, _} = __ENV__.function
+    call(team_id, {func, args})
+  end
+
+  def match_canceled(team_id, args) do
+    {func, _} = __ENV__.function
+    cast(team_id, {func, args})
+  end
+
+  def member_offline(team_id, args) do
+    {func, _} = __ENV__.function
+    cast(team_id, {func, args})
+  end
+
+  def member_online(team_id, args) do
+    {func, _} = __ENV__.function
+    cast(team_id, {func, args})
+  end
+
   def name(team_id) do
     :"Team_#{team_id}"
   end

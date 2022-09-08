@@ -80,27 +80,51 @@ defmodule Team do
     {{:ok, @status_matching}, state}
   end
 
-  def ready_match(~M{%Team team_id,mode} = state, [role_id, reply]) do
+  def ready_match(~M{%Team team_id,mode,status} = state, [role_id, reply]) do
+    if status == @status_battle do
+      throw("队伍还在另一场战斗中")
+    end
+
+    if status == @status_matching do
+      throw("队伍正在匹配中")
+    end
+
     Team.Matcher.Svr.ready_match(mode, [team_id, role_id, reply])
     {:ok, state}
   end
 
-  def cancel_match(~M{%Team team_id,mode,leader_id} = state, [role_id]) do
+  def cancel_match(~M{%Team leader_id} = state, [role_id]) do
     if role_id != leader_id do
       throw("你不是队长")
     end
 
-    Team.Matcher.Svr.cancel_match(mode, [team_id])
-    {:ok, state}
+    with {:ok, state} <- do_cancel_match(state, role_id) do
+      state |> sync() |> ok()
+    else
+      error ->
+        throw(error)
+    end
+  end
+
+  def member_offline(~M{%Team } = state, [role_id]) do
+    with {:ok, state} <- do_cancel_match(state, role_id) do
+      exit_team(state, [role_id])
+    end
+  end
+
+  def member_online(~M{%Team mode,team_id} = state, [role_id]) do
+    Team.Matcher.Svr.member_online(mode, [team_id, role_id])
+    state |> ok()
   end
 
   def match_ok(~M{%Team status} = state, []) do
-    if status == @status_matching do
-      ~M{state|status: @status_matched}
-      |> sync()
-    end
+    Logger.debug(mod: "match_ok", info: state)
 
-    {:ok, state}
+    if status == @status_matching do
+      ~M{state|status: @status_matched} |> sync() |> ok()
+    else
+      {:ok, state}
+    end
   end
 
   def begin_battle(~M{%Team status} = state, []) do
@@ -132,6 +156,24 @@ defmodule Team do
     end
 
     add_members(state, role_id) |> sync() |> ok()
+  end
+
+  def get_team_info(~M{%Team members} = state, role_id) do
+    with true <- Enum.member?(Map.values(members), role_id) || {:error, :kicked} do
+      {{:ok, state}, state}
+    else
+      error ->
+        {error, state}
+    end
+  end
+
+  def match_canceled(~M{%Team members} = state, [role_id]) do
+    if !Enum.member?(members, role_id) do
+      throw("玩家已不再该队伍")
+    end
+
+    # TODO 广播消息： [玩家名]未进行匹配确认，匹配中断
+    ~M{state|status: @status_idle} |> sync() |> ok()
   end
 
   defp find_free_pos(state, poses \\ @positions)
@@ -200,5 +242,27 @@ defmodule Team do
       end
     end)
     |> div(member_num)
+  end
+
+  defp do_cancel_match(~M{%Team team_id,mode,status} = state, role_id) do
+    if status == @status_battle do
+      throw("队伍还在另一场战斗中，无法取消匹配")
+    end
+
+    if status == @status_matched do
+      throw("队伍匹配完成，无法取消匹配")
+    end
+
+    with :ok <- Team.Matcher.Svr.cancel_match(mode, [team_id]) do
+      if status == @status_matching do
+        # TODO 广播消息： [玩家名]退出了PARTY，匹配中断
+        Logger.debug(cancel_match: "广播消息： #{role_id} 退出了team: #{team_id}，匹配中断")
+      end
+
+      {:ok, ~M{state|status: @status_idle}}
+    else
+      error ->
+        throw(error)
+    end
   end
 end

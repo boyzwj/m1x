@@ -35,7 +35,8 @@ defmodule Dc do
 
       {:ok, ~M{state| room_list}}
     else
-      _ ->
+      err ->
+        Logger.error(err: inspect(err), label: "no_dsa_alivable")
         {:error, :no_dsa_alivable}
     end
   end
@@ -67,7 +68,7 @@ defmodule Dc do
 
   def h(~M{%Dc } = state, _from, ~M{%Dc.RoomMsg2S room_id,data}) do
     ds_msg = PB.decode!(data)
-    IO.inspect(ds_msg)
+    Logger.debug("Dc.RoomMsg2S: #{inspect(ds_msg)}")
     Lobby.Room.Svr.cast(room_id, {:ds_msg, ds_msg})
     state
   end

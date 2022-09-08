@@ -202,6 +202,17 @@ defmodule Lobby.Room do
     {:ok, state}
   end
 
+  def ds_msg(
+        ~M{%M room_type: @room_type_match,password} = state,
+        ~M{%Pbm.Room.StartGame2C map_id} = msg
+      ) do
+    mode = (Data.GameModeMap.get(map_id) || %{mode_id: 1002}) |> Map.get(:mode_id)
+    # 通知队伍刷新状态
+    Team.Matcher.Svr.ds_started(mode, [password])
+    broad_cast(msg)
+    {:ok, state}
+  end
+
   def ds_msg(state, msg) do
     broad_cast(msg)
     {:ok, state}
