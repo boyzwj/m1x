@@ -42,6 +42,7 @@ defmodule Dsa.Svr do
 
   def handle_info({:udp, _socket, _ip, _port, data}, state) do
     msg = PB.decode!(data)
+    Logger.info("dsa receive :  #{inspect(msg)}")
     state = Dsa.handle(state, msg)
     {:noreply, state}
   end
