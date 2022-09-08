@@ -96,6 +96,13 @@ defmodule Robot.Worker do
   end
 
   ### ================== CALLBACK ==================
+
+  @impl true
+  def handle_cast({:handle, msg}, state) do
+    state = FSM.h(state, msg)
+    {:noreply, state}
+  end
+
   @impl true
   def handle_info(:loop, state) do
     state = FSM.loop(state)

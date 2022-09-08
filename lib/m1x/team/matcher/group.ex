@@ -199,10 +199,10 @@ defmodule Team.Matcher.Group do
       end)
       |> Enum.into(%{})
 
-    %Pbm.Team.ReadyMatch2C{infos: infos} |> broad_cast(all_role_ids)
-
     Enum.map(side1, &Team.Svr.match_ok(&1.team_id, []))
     Enum.map(side2, &Team.Svr.match_ok(&1.team_id, []))
+
+    %Pbm.Team.ReadyMatch2C{infos: infos} |> broad_cast(all_role_ids)
 
     Logger.debug("do start #{inspect(state)}")
     match_time = Util.unixtime()
@@ -229,6 +229,7 @@ defmodule Team.Matcher.Group do
     delete(token)
   end
 
+  # TODO 匹配完成期间，任意拒绝准备，通知本队伍状态为idle，其它队伍状态为matching
   def client_reply(~M{%__MODULE__ token,infos,all_role_ids,side1,side2} = _state, [
         cur_team_id,
         cur_role_id,
@@ -255,7 +256,7 @@ defmodule Team.Matcher.Group do
     {:error, cur_team_id}
   end
 
-  def client_reply(~M{%__MODULE__ infos,all_role_ids,side1,side2} = state, [
+  def client_reply(~M{%__MODULE__ infos,all_role_ids} = state, [
         cur_team_id,
         cur_role_id,
         @rep_accept
@@ -276,7 +277,7 @@ defmodule Team.Matcher.Group do
     :ok
   end
 
-  def loop(~M{%__MODULE__ side1,side2,token,infos} = state) do
+  def loop(~M{%__MODULE__ } = state) do
     # IO.inspect(infos)
     check_all_ready(state)
   end
@@ -295,15 +296,13 @@ defmodule Team.Matcher.Group do
     end
   end
 
-  def begin_to_start(~M{%__MODULE__  all_role_ids,token,side1,side2} = state) do
-    IO.inspect("begin to start")
+  def begin_to_start(~M{%__MODULE__  all_role_ids,token} = state) do
+    # map_id = 10_051_068
     map_id = Team.Matcher.random_map_id()
 
     with {:ok, room_id} <- Lobby.Svr.create_room([@room_type_match, all_role_ids, map_id, token]) do
       role_id = List.first(all_role_ids)
       Lobby.Room.Svr.start_game(room_id, role_id)
-      Enum.map(side1, &Team.Svr.begin_battle(&1.team_id, []))
-      Enum.map(side2, &Team.Svr.begin_battle(&1.team_id, []))
       state
     else
       error ->

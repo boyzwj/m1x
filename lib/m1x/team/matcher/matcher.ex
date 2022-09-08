@@ -78,6 +78,7 @@ defmodule Team.Matcher do
       else
         {:error, team_id} ->
           cancel_match(state, [team_id])
+          Team.Svr.match_canceled(team_id, [role_id])
       end
 
       state |> reply(:ok)
@@ -92,8 +93,11 @@ defmodule Team.Matcher do
       throw("不在匹配队列中了")
     end
 
-    with ~M{%MTeam pool_id} <- MTeam.get(team_id) do
-      Pool.get(pool_id) |> Pool.remove_team(team_id) |> Pool.set()
+    with ~M{%MTeam pool_ids} <- MTeam.get(team_id) do
+      Enum.each(pool_ids, fn pool_id ->
+        Pool.get(pool_id) |> Pool.remove_team(team_id) |> Pool.set()
+      end)
+
       MTeam.delete(team_id)
       team_ids = MapSet.delete(team_ids, team_id)
       ~M{state | team_ids} |> reply(:ok)
@@ -120,6 +124,28 @@ defmodule Team.Matcher do
       end
 
     reply(state, group_infos)
+  end
+
+  def ds_started(~M{%__MODULE__ } = state, [token]) do
+    ~M{%Team.Matcher.Group side1,side2} = Group.get(token)
+
+    for ~M{%Team.Matcher.Team team_id} <- side1 ++ side2 do
+      Team.Svr.begin_battle(team_id, [])
+    end
+
+    Group.rm_from_waiting_list(token)
+    reply(state, :ok)
+  end
+
+  def member_online(~M{%__MODULE__ } = state, [team_id, role_id]) do
+    with ~M{%MTeam token} <- MTeam.get(team_id),
+         ~M{%Group infos} <- Group.get(token) do
+      %Pbm.Team.ReadyMatch2C{infos: infos} |> Role.Misc.send_to(role_id)
+      reply(state, :ok)
+    else
+      _ ->
+        reply(state, {:error, "no found group info,role_id: #{role_id},team_id: #{team_id}"})
+    end
   end
 
   def loop(state) do
@@ -185,5 +211,17 @@ defmodule Team.Matcher do
     Team.Matcher.Svr.ready_match(1002, [104, Enum.at(robot_ids, 7), 1])
     Team.Matcher.Svr.ready_match(1002, [104, Enum.at(robot_ids, 8), 1])
     Team.Matcher.Svr.ready_match(1002, [104, Enum.at(robot_ids, 9), 1])
+  end
+
+  def test4() do
+    role_id = 100_000_001
+    {:ok, team_id} = Team.Manager.create_team([role_id, 1002])
+    {:ok, _} = Team.Svr.begin_match(team_id, [role_id])
+    Team.Svr.name(1001) |> :global.whereis_name() |> :sys.get_state()
+    Role.Mod.Team.load(100_000_001)
+    robot_ids = Bot.Manager.random_bot_by_type(2, 10)
+    Team.Matcher.Svr.join(1002, [101, Enum.slice(robot_ids, 0, 1), 1600, false])
+    Process.sleep(1000)
+    Team.Matcher.Svr.cancel_match(1002, [101])
   end
 end

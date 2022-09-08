@@ -75,6 +75,7 @@ defmodule Dsa.Worker do
     {pid, ref} =
       Process.spawn(
         fn ->
+          Logger.debug("execute cmd: #{System.user_home!()}/#{ds_path}/ds #{inspect(args)}")
           System.cmd("#{System.user_home!()}/#{ds_path}/ds", args)
         end,
         [:monitor]
@@ -130,10 +131,10 @@ defmodule Dsa.Worker do
   end
 
   def handle(state, ~M{%Pbm.Dsa.Start2S pid,result} = msg) do
-    Logger.warn("receive #{inspect(msg)}")
+    # Logger.warn("receive #{inspect(msg)}")
 
     if result == 0 do
-      Logger.debug("the battle os pid is #{pid}")
+      # Logger.debug("the battle os pid is #{pid}")
       ~M{%M state| os_pid: pid}
     else
       Logger.warning("battle start fail!")
@@ -173,12 +174,12 @@ defmodule Dsa.Worker do
         ~M{%Pbm.Dsa.Heartbeat2S battle_id, pid, defender_score, attacker_score, online_players} =
           msg
       ) do
-    Logger.warn("receive #{inspect(msg)}")
+    # Logger.warn("receive #{inspect(msg)}")
     state
   end
 
   def handle(~M{%M } = state, ~M{%Pbm.Dsa.PlayerQuit2S battle_id, player_id,reason} = msg) do
-    Logger.warn("receive #{inspect(msg)}")
+    # Logger.warn("receive #{inspect(msg)}")
     state
   end
 
@@ -244,6 +245,8 @@ defmodule Dsa.Worker do
   end
 
   defp check_start(~M{%M room_id,battle_id,out_port,host,map_id,ready_states} = state) do
+    IO.inspect(ready_states, label: "ready_states")
+
     if ready_states |> Map.values() |> Enum.all?() do
       ~M{%Pbm.Room.StartGame2C battle_id, host, port: out_port,map_id}
       |> PB.encode!()

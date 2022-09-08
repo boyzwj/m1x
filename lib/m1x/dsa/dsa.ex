@@ -148,7 +148,7 @@ defmodule Dsa do
   end
 
   def end_game(~M{%Dsa workers} = state, [battle_id, room_id]) do
-    Logger.debug("game end battle_id : #{battle_id}")
+    # Logger.debug("game end battle_id : #{battle_id}")
     send2dc(state, %Dc.BattleEnd2S{room_id: room_id})
 
     with ~M{host, port} <- Map.get(workers, battle_id) do
@@ -165,7 +165,8 @@ defmodule Dsa do
       GenServer.cast(worker_pid, {:msg, msg})
     else
       _ ->
-        Logger.warn("receive unexpected msg : #{inspect(msg)}")
+        nil
+        # Logger.warn("receive unexpected msg : #{inspect(msg)}")
     end
 
     state

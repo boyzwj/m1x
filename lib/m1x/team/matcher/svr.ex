@@ -22,6 +22,14 @@ defmodule Team.Matcher.Svr do
     call(mode, {:get_group_infos, args})
   end
 
+  def ds_started(mode, args) do
+    call(mode, {:ds_started, args})
+  end
+
+  def member_online(mode, args) do
+    call(mode, {:member_online, args})
+  end
+
   def child_spec(mode) do
     %{
       id: "#{__MODULE__}_#{mode}",
@@ -39,8 +47,13 @@ defmodule Team.Matcher.Svr do
 
   @impl true
   def handle_call({func, args}, _from, state) do
-    {reply, state} = apply(Team.Matcher, func, [state, args])
-    {:reply, reply, state}
+    try do
+      {reply, state} = apply(Team.Matcher, func, [state, args])
+      {:reply, reply, state}
+    catch
+      error ->
+        {:reply, {:error, error}, state}
+    end
   end
 
   @impl true

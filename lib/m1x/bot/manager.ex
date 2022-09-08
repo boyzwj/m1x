@@ -88,7 +88,7 @@ defmodule Bot.Manager do
   def random_bot_by_type(type, num) do
     Data.RobotInfoManage.ids()
     |> Util.shuffle()
-    |> Enum.slice(0..num)
+    |> Enum.slice(0..(num - 1))
     |> Enum.map(&make_bot_id(&1, type))
   end
 end

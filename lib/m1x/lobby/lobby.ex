@@ -32,7 +32,6 @@ defmodule Lobby do
       ) do
     {:ok, room_id} = make_room_id()
     args = [room_id | args]
-    IO.inspect(args)
 
     with {:ok, _pid} <- DynamicSupervisor.start_child(Room.Sup, {Lobby.Room.Svr, args}) do
       {{:ok, room_id}, state}
@@ -79,7 +78,6 @@ defmodule Lobby do
 
     with {:ok, pool, room_id} <- LimitedQueue.pop(pool) do
       Process.put({__MODULE__, :room_id_pool}, {id_start, pool})
-      Logger.debug("create room #{room_id}")
       {:ok, room_id}
     else
       _ ->
