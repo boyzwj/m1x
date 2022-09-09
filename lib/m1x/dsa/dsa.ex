@@ -73,12 +73,12 @@ defmodule Dsa do
 
   def secondloop(~M{%Dsa id,status,dc_host,dc_port} = state) when status == @status_init do
     with {:ok, dc_socket} <- :gen_tcp.connect(dc_host, dc_port, [:binary, active: true]) do
-      Logger.debug("connected to dsa center")
+      Logger.info("connected to dsa center")
       status = @status_online
       ~M{state| status,dc_socket}
     else
       err ->
-        Logger.debug("dsa #{id} connect error #{inspect(err)}")
+        Logger.info("dsa #{id} connect error #{inspect(err)}")
         state
     end
   end
@@ -124,7 +124,6 @@ defmodule Dsa do
   end
 
   def send2dc(~M{%Dsa dc_socket} = state, msg) do
-    Logger.info("dsa send : #{inspect(msg)}")
     data = Dc.Pb.encode!(msg)
     len = IO.iodata_length(data)
     :ok = :gen_tcp.send(dc_socket, [<<len::16-little>> | data])

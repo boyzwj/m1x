@@ -77,13 +77,13 @@ config :logger, backends: [:console, {LoggerFileBackend, :info}, {LoggerFileBack
 config :logger, :info,
   format: "### [$date $time] $metadata[$level] \n  * $levelpad$message\n\n",
   metadata: [:module, :function, :line],
-  path: "./logs/info_#{Date.utc_today()}.MD",
+  path: "./logs/info_#{System.get_env("RELEASE_NODE") || node()}_#{Date.utc_today()}.MD",
   level: :info
 
 config :logger, :error_log,
   format: "### [$date $time] $metadata[$level] \n  * $levelpad$message\n\n",
   metadata: [:module, :function, :line],
-  path: "./logs/error_#{Date.utc_today()}.MD",
+  path: "./logs/error_#{System.get_env("RELEASE_NODE") || node()}_#{Date.utc_today()}.MD",
   level: :error
 
 config :logger, :console,

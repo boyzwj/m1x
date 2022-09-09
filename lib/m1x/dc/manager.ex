@@ -79,16 +79,19 @@ defmodule Dc.Manager do
   end
 
   def test_battle() do
+    bot_ids = Bot.Manager.random_bot_by_type(1, 5)
+
+
     start_game([
       10_051_068,
       1,
       %{
-        1 => 100_000_001,
-        2 => 100_000_002,
-        3 => 100_000_003,
+        1 => Enum.at(bot_ids,0),
+        2 => Enum.at(bot_ids,1),
+        3 => Enum.at(bot_ids,3),
         4 => nil,
-        6 => 100_000_006,
-        7 => 100_000_007
+        6 => Enum.at(bot_ids,4),
+        7 => Enum.at(bot_ids,5),
       }
     ])
   end
