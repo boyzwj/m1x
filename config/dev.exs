@@ -112,4 +112,8 @@ config :exsync,
   addition_dirs: ["/proto", "/priv/game_proto"],
   extensions: [".ex", ".proto"]
 
+
+config :mnesia,
+  dir: '.mnesia/#{Mix.env}/#{node()}'
+
 # reload_callback: {PBClass, :create, []}

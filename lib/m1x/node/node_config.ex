@@ -112,7 +112,7 @@ defmodule NodeConfig do
       {Dc.Sup, []},
       {Bot.Sup, []},
       {Team.Sup, []},
-      # {Dba.Mnesia.Sup ,[]}
+      {Dba.Mnesia.Sup ,[]}
     ]
   end
 
