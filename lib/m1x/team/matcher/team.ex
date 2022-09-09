@@ -197,6 +197,13 @@ defmodule Team.Matcher.Team do
   end
 
   def delete(team_id) do
-    Process.delete({__MODULE__, team_id})
+    with ~M{%__MODULE__ pool_ids} <- Process.delete({__MODULE__, team_id}) do
+      Enum.each(pool_ids, fn pool_id ->
+        Pool.get(pool_id) |> Pool.remove_team(team_id) |> Pool.set()
+      end)
+    else
+      _ ->
+      {:error,"队伍信息异常"}
+    end
   end
 end

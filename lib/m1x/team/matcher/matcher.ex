@@ -93,17 +93,12 @@ defmodule Team.Matcher do
       throw("不在匹配队列中了")
     end
 
-    with ~M{%MTeam pool_ids} <- MTeam.get(team_id) do
-      Enum.each(pool_ids, fn pool_id ->
-        Pool.get(pool_id) |> Pool.remove_team(team_id) |> Pool.set()
-      end)
-
-      MTeam.delete(team_id)
+    with :ok <- MTeam.delete(team_id) do
       team_ids = MapSet.delete(team_ids, team_id)
       ~M{state | team_ids} |> reply(:ok)
     else
-      _ ->
-        throw("队伍信息异常")
+      {:error,msg} ->
+        throw(msg)
     end
   end
 
@@ -126,15 +121,16 @@ defmodule Team.Matcher do
     reply(state, group_infos)
   end
 
-  def ds_started(~M{%__MODULE__ } = state, [token]) do
+  def ds_started(~M{%__MODULE__ team_ids } = state, [token]) do
     ~M{%Team.Matcher.Group side1,side2} = Group.get(token)
-
-    for ~M{%Team.Matcher.Team team_id} <- side1 ++ side2 do
+      ids = for ~M{%Team.Matcher.Team team_id} <- side1 ++ side2 do
       Team.Svr.begin_battle(team_id, [])
+      MTeam.delete(team_id)
+      team_id
     end
-
+    team_ids = Enum.reduce(ids,team_ids,fn x,acc -> MapSet.delete(acc, x) end)
     Group.rm_from_waiting_list(token)
-    reply(state, :ok)
+    ~M{state | team_ids} |> reply(:ok)
   end
 
   def member_online(~M{%__MODULE__ } = state, [team_id, role_id]) do
