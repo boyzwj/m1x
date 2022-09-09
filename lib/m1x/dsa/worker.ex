@@ -208,7 +208,7 @@ defmodule Dsa.Worker do
     members
     |> Enum.each(fn {pos, id} ->
       if id != nil do
-        ~M{%Dc.RoleInfo role_name,level,avatar_id} = infos[id]
+        ~M{%Dc.RoleInfo role_name,level,avatar_id,robot,robot_type} = infos[id]
 
         camp_id =
           cond do
@@ -232,8 +232,8 @@ defmodule Dsa.Worker do
           |> (&%Pbm.Dsa.Role{
                 replace_uid: id,
                 ai_property_type: 1,
-                robot: 0,
-                robot_type: 0,
+                robot: robot,
+                robot_type: robot_type,
                 base_info: &1
               }).()
           |> (&%Pbm.Dsa.RoleInfo2C{role: &1}).()

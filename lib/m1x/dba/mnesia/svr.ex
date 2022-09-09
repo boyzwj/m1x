@@ -9,6 +9,10 @@ defmodule Dba.Mnesia.Svr do
     GenServer.call(__MODULE__, {:dirty_write, data})
   end
 
+  def dirty_read(tab, key) do
+    GenServer.call(__MODULE__, {:dirty_read, tab, key})
+  end
+
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
@@ -22,6 +26,19 @@ defmodule Dba.Mnesia.Svr do
   end
 
   @impl true
+
+  def handle_call({:dirty_read, tab, key}, _from, state) do
+    Logger.debug("do dirty read #{inspect(self())}")
+
+    reply =
+      case :mnesia.dirty_read(tab, key) do
+        [t] -> Memento.Query.Data.load(t)
+        [] -> nil
+      end
+
+    {:reply, reply, state}
+  end
+
   def handle_call({:dirty_wirte, data}, _from, state) do
     reply =
       data
