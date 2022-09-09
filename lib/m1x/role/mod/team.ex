@@ -24,7 +24,7 @@ defmodule Role.Mod.Team do
   defp on_offline(~M{%M team_id,role_id,status: @status_matching} = state) when team_id > 0 do
     Logger.debug(mod: __MODULE__, info: "on_offline")
 
-    Team.Svr.member_offline(team_id, [role_id])
+    Team.Svr.exit_team(team_id, [role_id])
     ~M{state|team_id: 0,status: @status_idle,mode: 0} |> set_data()
   end
 
@@ -111,9 +111,17 @@ defmodule Role.Mod.Team do
     end
   end
 
-  def h(~M{%M team_id, role_id} = state, ~M{%Pbm.Team.Exit2S }) do
+  def h(~M{%M team_id, role_id,status} = state, ~M{%Pbm.Team.Exit2S }) do
     if team_id == 0 do
       throw("已经退出了")
+    end
+
+    if status == @status_battle do
+      throw("队伍还在另一场战斗中,无法退出队伍")
+    end
+
+    if status == @status_matched do
+      throw("队伍匹配成功，无法退出队伍")
     end
 
     with :ok <- Team.Svr.exit_team(team_id, [role_id]) do

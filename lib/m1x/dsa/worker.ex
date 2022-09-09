@@ -246,8 +246,6 @@ defmodule Dsa.Worker do
   end
 
   defp check_start(~M{%M room_id,battle_id,out_port,host,map_id,ready_states} = state) do
-    IO.inspect(ready_states, label: "ready_states")
-
     if ready_states |> Map.values() |> Enum.all?() do
       ~M{%Pbm.Room.StartGame2C battle_id, host, port: out_port,map_id}
       |> PB.encode!()
