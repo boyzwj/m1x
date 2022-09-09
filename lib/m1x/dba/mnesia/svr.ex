@@ -28,7 +28,7 @@ defmodule Dba.Mnesia.Svr do
   @impl true
 
   def handle_call({:dirty_read, tab, key}, _from, state) do
-    Logger.debug("do dirty read #{inspect(self())}")
+    # Logger.debug("do dirty read #{inspect(self())}")
 
     reply =
       case :mnesia.dirty_read(tab, key) do
@@ -39,7 +39,7 @@ defmodule Dba.Mnesia.Svr do
     {:reply, reply, state}
   end
 
-  def handle_call({:dirty_wirte, data}, _from, state) do
+  def handle_call({:dirty_write, data}, _from, state) do
     reply =
       data
       |> Memento.Query.Data.dump()
