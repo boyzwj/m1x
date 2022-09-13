@@ -33,32 +33,31 @@ defmodule Team do
     |> ok()
   end
 
-
-
-def exit_team(~M{%Team status: @status_matching} = state, [role_id]) do
-      with {:ok, state} <- do_cancel_match(state, role_id),
-      {:ok,state } <- do_exit_team(state,[role_id]) do
-        state |> sync() |> ok()
-      else
-        {:error,msg} ->
-          throw(msg)
-      end
-    end
-
-  def exit_team(~M{%Team status: @status_idle} = state, [role_id]) do
-    with {:ok,state } <- do_exit_team(state,[role_id]) do
+  def exit_team(~M{%Team status: @status_matching} = state, [role_id]) do
+    with {:ok, state} <- do_cancel_match(state, role_id),
+         {:ok, state} <- do_exit_team(state, [role_id]) do
       state |> sync() |> ok()
     else
-      {:error,msg} ->
+      {:error, msg} ->
         throw(msg)
     end
   end
 
-  defp do_exit_team(~M{%Team status: @status_matched} , _), do: {:error,"队伍匹配成功，无法退出队伍"}
-  defp do_exit_team(~M{%Team status: @status_battle} , _), do:  {:error,"队伍还在另一场战斗中,无法退出队伍"}
+  def exit_team(~M{%Team status: @status_idle} = state, [role_id]) do
+    with {:ok, state} <- do_exit_team(state, [role_id]) do
+      state |> sync() |> ok()
+    else
+      {:error, msg} ->
+        throw(msg)
+    end
+  end
+
+  defp do_exit_team(~M{%Team status: @status_matched}, _), do: {:error, "队伍匹配成功，无法退出队伍"}
+  defp do_exit_team(~M{%Team status: @status_battle}, _), do: {:error, "队伍还在另一场战斗中,无法退出队伍"}
+
   defp do_exit_team(~M{%Team members,member_num,leader_id,team_id} = state, [role_id]) do
     if not :ordsets.is_element(role_id, role_ids()) do
-      {:error,"已经退出队伍了"}
+      {:error, "已经退出队伍了"}
     else
       members =
         for {k, v} <- members, v != role_id, into: %{} do
@@ -80,7 +79,7 @@ def exit_team(~M{%Team status: @status_matching} = state, [role_id]) do
         self() |> Process.send(:shutdown, [:nosuspend])
       end
 
-      {:ok,~M{state| members,member_num,leader_id}}
+      {:ok, ~M{state| members,member_num,leader_id}}
     end
   end
 
@@ -124,7 +123,7 @@ def exit_team(~M{%Team status: @status_matching} = state, [role_id]) do
     with {:ok, state} <- do_cancel_match(state, role_id) do
       state |> sync() |> ok()
     else
-      {:error,msg} ->
+      {:error, msg} ->
         throw(msg)
     end
   end
@@ -148,9 +147,22 @@ def exit_team(~M{%Team status: @status_matching} = state, [role_id]) do
     if status == @status_matched do
       ~M{state|status: @status_battle}
       |> sync()
+      |> ok()
+    else
+      {:ok, state}
     end
+  end
 
-    {:ok, state}
+  def battle_closed(~M{%Team status} = state, [reason]) do
+    if status in [@status_matched, @status_battle] do
+      Logger.debug("battle close for reason: #{reason}")
+
+      ~M{state|status: @status_idle}
+      |> sync()
+      |> ok()
+    else
+      {:ok, state}
+    end
   end
 
   def invite_into_team(~M{%Team members,status} = state, [role_id, invitor_id]) do
@@ -261,18 +273,22 @@ def exit_team(~M{%Team status: @status_matching} = state, [role_id]) do
     |> div(member_num)
   end
 
-  defp do_cancel_match(~M{%Team status: @status_battle} , _role_id), do: {:error,"队伍还在另一场战斗中，无法取消匹配"}
-  defp do_cancel_match(~M{%Team status: @status_matched} , _role_id), do: {:error,"队伍匹配完成，无法取消匹配"}
+  defp do_cancel_match(~M{%Team status: @status_battle}, _role_id),
+    do: {:error, "队伍还在另一场战斗中，无法取消匹配"}
+
+  defp do_cancel_match(~M{%Team status: @status_matched}, _role_id), do: {:error, "队伍匹配完成，无法取消匹配"}
+
   defp do_cancel_match(~M{%Team team_id,mode,status} = state, role_id) do
     with :ok <- Team.Matcher.Svr.cancel_match(mode, [team_id]) do
       if status == @status_matching do
         # TODO 广播消息： [玩家名]退出了PARTY，匹配中断
         Logger.debug(cancel_match: "广播消息： #{role_id} 退出了team: #{team_id}，匹配中断")
       end
+
       {:ok, ~M{state|status: @status_idle}}
     else
-      {:error,msg} ->
-        {:error,msg}
+      {:error, msg} ->
+        {:error, msg}
     end
   end
 end

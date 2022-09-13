@@ -52,8 +52,12 @@ defmodule Team.Svr do
     cast(team_id, {func, args})
   end
 
-
   def member_online(team_id, args) do
+    {func, _} = __ENV__.function
+    cast(team_id, {func, args})
+  end
+
+  def battle_closed(team_id, args) do
     {func, _} = __ENV__.function
     cast(team_id, {func, args})
   end

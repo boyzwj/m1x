@@ -22,10 +22,6 @@ defmodule Team.Matcher.Svr do
     call(mode, {:get_group_infos, args})
   end
 
-  def ds_started(mode, args) do
-    call(mode, {:ds_started, args})
-  end
-
   def member_online(mode, args) do
     call(mode, {:member_online, args})
   end

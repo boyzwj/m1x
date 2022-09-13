@@ -97,7 +97,7 @@ defmodule Team.Matcher do
       team_ids = MapSet.delete(team_ids, team_id)
       ~M{state | team_ids} |> reply(:ok)
     else
-      {:error,msg} ->
+      {:error, msg} ->
         throw(msg)
     end
   end
@@ -119,18 +119,6 @@ defmodule Team.Matcher do
       end
 
     reply(state, group_infos)
-  end
-
-  def ds_started(~M{%__MODULE__ team_ids } = state, [token]) do
-    ~M{%Team.Matcher.Group side1,side2} = Group.get(token)
-      ids = for ~M{%Team.Matcher.Team team_id} <- side1 ++ side2 do
-      Team.Svr.begin_battle(team_id, [])
-      MTeam.delete(team_id)
-      team_id
-    end
-    team_ids = Enum.reduce(ids,team_ids,fn x,acc -> MapSet.delete(acc, x) end)
-    Group.rm_from_waiting_list(token)
-    ~M{state | team_ids} |> reply(:ok)
   end
 
   def member_online(~M{%__MODULE__ } = state, [team_id, role_id]) do
@@ -174,12 +162,31 @@ defmodule Team.Matcher do
     state
   end
 
-  defp loop_group(state) do
-    for token <- Group.get_waiting_list() do
-      Group.get(token) |> Group.loop()
-    end
+  defp loop_group(~M{%Matcher team_ids} = state) do
+    # for token <- Group.get_waiting_list() do
+    #   Group.get(token) |> Group.loop()
+    # end
 
-    state
+    # state
+
+    Group.get_waiting_list()
+    |> Enum.reduce(state, fn token, state_acc ->
+      case Group.get(token) |> Group.loop() do
+        {:battle_started, tids} ->
+          Enum.each(tids, fn team_id ->
+            #  TODO 后面将战斗中状态先同步至role进程，然后role进程在同步至team进程
+            Team.Svr.begin_battle(team_id, [])
+            MTeam.delete(team_id)
+          end)
+
+          Group.rm_from_waiting_list(token)
+          team_ids = Enum.reduce(tids, team_ids, fn x, acc -> MapSet.delete(acc, x) end)
+          ~M{state_acc|team_ids}
+
+        :ignore ->
+          state_acc
+      end
+    end)
   end
 
   defp reply(state, reply) do

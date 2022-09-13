@@ -273,7 +273,7 @@ defmodule Team.Matcher.Group do
       end
 
     %Pbm.Team.ReadyMatch2C{infos: infos} |> broad_cast(all_role_ids)
-    ~M{state| infos} |> check_all_ready()
+    ~M{state| infos} |> set()
     :ok
   end
 
@@ -289,25 +289,31 @@ defmodule Team.Matcher.Group do
         role_id
       end
 
-    if all_role_ids |> Enum.all?(&MapSet.member?(ready_ids, &1)) do
-      begin_to_start(state)
+    with true <- Enum.all?(all_role_ids, &MapSet.member?(ready_ids, &1)),
+         {:ok, team_ids} <- begin_to_start(state) do
+      {:battle_started, team_ids}
     else
-      state |> set()
+      _ ->
+        :ignore
     end
   end
 
-  def begin_to_start(~M{%__MODULE__  all_role_ids,token} = state) do
+  def begin_to_start(~M{%__MODULE__  all_role_ids,token,side1,side2}) do
     # map_id = 10_051_068
     map_id = Team.Matcher.random_map_id()
 
-    with {:ok, room_id} <- Lobby.Svr.create_room([@room_type_match, all_role_ids, map_id, token]) do
-      role_id = List.first(all_role_ids)
-      Lobby.Room.Svr.start_game(room_id, role_id)
-      state
+    team_ids = (side1 ++ side2) |> Enum.map(& &1.team_id)
+    ext = ~M{team_ids}
+    role_id = List.first(all_role_ids)
+
+    with {:ok, room_id} <-
+           Lobby.Svr.create_room([@room_type_match, all_role_ids, map_id, token, ext]),
+         :ok <- Lobby.Room.Svr.start_game(room_id, role_id) do
+      {:ok, team_ids}
     else
       error ->
         Logger.error("start match room error : #{inspect(error)}")
-        state
+        :ignore
     end
   end
 

@@ -8,7 +8,9 @@ defmodule Lobby.Room do
             member_num: 0,
             create_time: 0,
             password: "",
-            last_game_time: 0
+            last_game_time: 0,
+            # ext 自定义扩展参数
+            ext: nil
 
   use Common
   alias __MODULE__, as: M
@@ -21,7 +23,11 @@ defmodule Lobby.Room do
   @room_type_free 1
   @room_type_match 2
 
-  def init([room_id, room_type, role_ids, map_id, password]) do
+  def init([room_id, room_type = @room_type_free, role_ids, map_id, password]) do
+    init([room_id, room_type, role_ids, map_id, password, nil])
+  end
+
+  def init([room_id, room_type, role_ids, map_id, password, ext]) do
     owner_id = List.first(role_ids)
     Logger.debug("Room.Svr room_id: [#{room_id}] owenr_id: [#{owner_id}]  start")
     :pg.join(M, self())
@@ -29,7 +35,7 @@ defmodule Lobby.Room do
     last_game_time = create_time
 
     state =
-      ~M{%M room_id,room_type,map_id,password,create_time,last_game_time,owner_id}
+      ~M{%M room_id,room_type,map_id,password,create_time,last_game_time,owner_id,ext}
       |> do_join(role_ids)
 
     :ets.insert(Room, {room_id, state})
@@ -190,11 +196,18 @@ defmodule Lobby.Room do
     end
   end
 
-  def ds_msg(~M{%M room_type} = state, ~M{%Pbm.Dsa.GameStatis2S battle_id, _battle_result} = msg) do
+  def ds_msg(
+        ~M{%M room_type,ext} = state,
+        ~M{%Pbm.Dsa.GameStatis2S battle_id, _battle_result} = msg
+      ) do
     Logger.debug("room receive ds msg #{inspect(msg)}")
     broad_cast(%Pbm.Battle.BattleResult2C{battle_id: battle_id})
 
     if room_type == @room_type_match do
+      # TODO 后续改到PlayerQuit
+      ~M{team_ids} = ext
+      Enum.each(team_ids, &Team.Svr.battle_closed(&1, [:battle_finish]))
+
       ## 匹配临时房间战斗结束关闭
       self() |> Process.send(:shutdown, [:nosuspend])
     end
@@ -202,14 +215,24 @@ defmodule Lobby.Room do
     {:ok, state}
   end
 
-  def ds_msg(
-        ~M{%M room_type: @room_type_match,password} = state,
-        ~M{%Pbm.Room.StartGame2C map_id} = msg
-      ) do
-    mode = (Data.GameModeMap.get(map_id) || %{mode_id: 1002}) |> Map.get(:mode_id)
-    # 通知队伍刷新状态
-    Team.Matcher.Svr.ds_started(mode, [password])
-    broad_cast(msg)
+  def ds_msg(~M{%M room_type,ext} = state, ~M{%Dc.BattleEnd2S } = msg) do
+    Logger.debug("room receive ds msg #{inspect(msg)}")
+
+    if room_type == @room_type_match do
+      # TODO 后续改到PlayerQuite
+      ~M{team_ids} = ext
+      Enum.each(team_ids, &Team.Svr.battle_closed(&1, [:ds_down]))
+
+      ## 匹配临时房间战斗结束关闭
+      self() |> Process.send(:shutdown, [:nosuspend])
+    end
+
+    {:ok, state}
+  end
+
+  def ds_msg(~M{%M room_type: @room_type_match,ext } = state, ~M{%Dc.StartBattleFail2S }) do
+    ~M{team_ids} = ext
+    Enum.each(team_ids, &Team.Svr.battle_closed(&1, [:start_fail]))
     {:ok, state}
   end
 

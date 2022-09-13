@@ -178,6 +178,7 @@ defmodule Dsa.Worker do
     state
   end
 
+  # TODO 需要处理战斗结束退出和战斗过程中退出
   def handle(~M{%M } = state, ~M{%Pbm.Dsa.PlayerQuit2S battle_id, player_id,reason} = msg) do
     # Logger.warn("receive #{inspect(msg)}")
     state

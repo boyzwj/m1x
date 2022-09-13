@@ -25,7 +25,9 @@ defmodule Dc do
 
           {v, ~M{%Dc.RoleInfo role_name,robot,robot_type,level,avatar_id}}
         end
+
       battle_id = GID.get_battle_id()
+
       Dc.Client.send2dsa(from, %Dc.StartGame2C{
         battle_id: battle_id,
         room_id: room_id,
@@ -62,8 +64,10 @@ defmodule Dc do
     ~M{state | dsa_infos}
   end
 
-  def h(~M{%Dc room_list} = state, _from, ~M{%Dc.BattleEnd2S room_id}) do
+  def h(~M{%Dc room_list} = state, _from, ~M{%Dc.BattleEnd2S room_id} = msg) do
+    # TODO 需通知room中的所有队伍或玩家回到idle状态
     room_list = Map.delete(room_list, room_id)
+    Lobby.Room.Svr.cast(room_id, {:ds_msg, msg})
     ~M{state | room_list}
   end
 
@@ -72,6 +76,13 @@ defmodule Dc do
     Logger.debug("Dc.RoomMsg2S: #{inspect(ds_msg)}")
     Lobby.Room.Svr.cast(room_id, {:ds_msg, ds_msg})
     state
+  end
+
+  def h(~M{%Dc room_list} = state, _from, ~M{%Dc.StartBattleFail2S room_id} = msg) do
+    # TODO 需通知room中的所有队伍或玩家回到idle状态
+    room_list = Map.delete(room_list, room_id)
+    Lobby.Room.Svr.cast(room_id, {:ds_msg, msg})
+    ~M{state | room_list}
   end
 
   def dsa_offline(~M{%Dc dsa_infos,sorted_dsa} = state, id) do
