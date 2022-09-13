@@ -57,30 +57,26 @@ defmodule Role.Mod.Team do
 
   defp on_init(~M{%M } = state), do: state |> IO.inspect(label: "on_init  team_id == 0 ")
 
+  def h(~M{%M team_id: 0} = _state, ~M{%Pbm.Team.Info2S }) do
+    info = ~M{%Pbm.Team.BaseInfo team_id: 0}
+    ~M{%Pbm.Team.Info2C info} |> sd()
+    :ok
+  end
+
   def h(~M{%M team_id,status,role_id,mode} = _state, ~M{%Pbm.Team.Info2S }) do
-    cond do
-      team_id == 0 ->
-        info = ~M{%Pbm.Team.BaseInfo team_id}
-        ~M{%Pbm.Team.Info2C info} |> sd()
-        :ok
+    with {:ok, ~M{%Team leader_id,members}} <- Team.Svr.get_team_info(team_id, role_id) do
+      info = ~M{%Pbm.Team.BaseInfo team_id,leader_id,mode,members,status}
+      ~M{%Pbm.Team.Info2C info} |> sd()
 
-      status == @status_matched ->
-        # 队伍匹配完成，断线重连后，需要同步匹配状态至该玩家
-        {:ok, ~M{%Team leader_id,members}} = Team.Svr.get_team_info(team_id, role_id)
+      if status == @status_matched do
+        # TODO 队伍匹配完成，断线重连后，需要同步匹配状态至该玩家
         Team.Svr.member_online(team_id, [role_id])
-        info = ~M{%Pbm.Team.BaseInfo team_id,leader_id,mode,members,status}
-        ~M{%Pbm.Team.Info2C info} |> sd()
-        :ok
+      end
 
-      status == @status_battle ->
-        # 队伍战斗，断线重连后，需要同步战斗状态至该玩家
-        # {:ok, ~M{%Team leader_id,members}} = Team.Svr.get_team_info(team_id, role_id)
-        # info = ~M{%Pbm.Team.BaseInfo team_id,leader_id,mode,members,status}
-        # ~M{%Pbm.Team.Info2C info} |> sd()
-        :ok
-
-      true ->
-        :ok
+      :ok
+    else
+      {:error, error} ->
+        throw(error)
     end
   end
 
