@@ -198,10 +198,12 @@ defmodule Lobby.Room do
 
   def ds_msg(
         ~M{%M room_type,ext} = state,
-        ~M{%Pbm.Dsa.GameStatis2S battle_id, _battle_result} = msg
+        ~M{%Pbm.Dsa.GameStatis2S battle_id, battle_result} = msg
       ) do
     Logger.debug("room receive ds msg #{inspect(msg)}")
-    broad_cast(%Pbm.Battle.BattleResult2C{battle_id: battle_id})
+
+    ~M{%Pbm.Battle.BattleResult2C battle_id,battle_result}
+    |> broad_cast()
 
     if room_type == @room_type_match do
       # TODO 后续改到PlayerQuit
