@@ -142,7 +142,7 @@ defmodule Lobby.Room do
   def join(~M{%M room_id,password,member_num} = state, [role_id, tpassword]) do
     if password != "" && password != tpassword, do: throw("房间密码不正确")
     if member_num >= length(@positions), do: throw("房间已满")
-    state = do_join(state, role_id)
+    state = do_join(state, [role_id])
     ~M{%Pbm.Room.Join2C role_id, room_id} |> broad_cast()
     state |> sync() |> ok()
   end
