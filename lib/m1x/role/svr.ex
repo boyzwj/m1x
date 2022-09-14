@@ -38,7 +38,7 @@ defmodule Role.Svr do
 
   # 判断玩家在线
   def alive?(role_id) do
-    :global.whereis_name(name(role_id))
+    pid(role_id)
     |> is_pid()
   end
 
@@ -85,6 +85,10 @@ defmodule Role.Svr do
 
   def get_all_data(role_id) do
     call(role_id, :get_all_data)
+  end
+
+  def execute(role_id, mod_fun, args) do
+    call(role_id, {:execute, mod_fun, args})
   end
 
   def role_id() do
@@ -243,6 +247,20 @@ defmodule Role.Svr do
     {:reply, reply, state}
   end
 
+  def handle_call({:execute, mod_fun, args}, _from, state) do
+    try do
+      mod = Function.info(mod_fun)[:module]
+      reply = mod_fun.(mod.get_data(), args)
+      {:reply, reply, state}
+    catch
+      {:error, err} ->
+        {:reply, {:error, err}, state}
+
+      err ->
+        {:reply, {:error, err}, state}
+    end
+  end
+
   @impl true
   def terminate(_reason, _state) do
     Role.save_all()
@@ -318,9 +336,12 @@ defmodule Role.Svr do
   end
 
   def call(role_id, msg) when is_integer(role_id) do
-    role_id
-    |> via()
-    |> GenServer.call(msg)
+    with role_pid when is_pid(role_pid) <- pid(role_id) do
+      call(role_pid, msg)
+    else
+      _ ->
+        {:error, :role_not_online}
+    end
   end
 
   def call(pid, msg) when is_pid(pid) do

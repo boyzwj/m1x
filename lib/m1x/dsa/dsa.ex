@@ -97,6 +97,17 @@ defmodule Dsa do
     end
   end
 
+  def dc_msg(~M{%Dsa workers} = state, ~M{%Dc.DsMsg2C battle_id,data}) do
+    with ~M{worker_pid} <- workers |> Map.get(battle_id) do
+      GenServer.cast(worker_pid, {:ds_msg, PB.decode!(data)})
+      state
+    else
+      _ ->
+        Logger.warning("Dsa can't find worker with battle_id: #{battle_id}")
+        state
+    end
+  end
+
   def dc_msg(state, msg) do
     Logger.warning("receive dc msg #{inspect(msg)}")
     state
@@ -113,9 +124,9 @@ defmodule Dsa do
     Logger.debug("game end battle_id : #{battle_id}")
     send2dc(state, %Dc.BattleEnd2S{room_id: room_id})
 
-    with ~M{host, port} <- Map.get(workers, battle_id) do
+    with {~M{host, port}, workers} <- Map.pop(workers, battle_id) do
       state = recycle_resource(state, {host, port})
-      {:ok, state}
+      {:ok, ~M{state|workers}}
     else
       _ ->
         {:ok, state}

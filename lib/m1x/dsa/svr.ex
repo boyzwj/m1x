@@ -5,7 +5,6 @@ defmodule Dsa.Svr do
 
   ## ===================  API ==========================
 
-
   def end_game(args) do
     {func, _} = __ENV__.function
     GenServer.call(__MODULE__, {func, args})

@@ -45,6 +45,10 @@ defmodule Dsa.Worker do
     }
   end
 
+  def send_to_ds(battle_id, msg) do
+    cast(battle_id, {:ds_msg, msg})
+  end
+
   def start_link([battle_id | _] = args) do
     GenServer.start_link(__MODULE__, args, name: via(battle_id))
   end
@@ -104,12 +108,17 @@ defmodule Dsa.Worker do
     {:noreply, state}
   end
 
+  def handle_cast({:ds_msg, msg}, state) do
+    send2ds(state, msg)
+    {:noreply, state}
+  end
+
   def cast(battle_id, msg) when is_integer(battle_id) do
     with pid when is_pid(pid) <- name(battle_id) |> :global.whereis_name() do
       cast(pid, msg)
     else
       _ ->
-        {:error, :room_not_exist}
+        {:error, :battle_not_exist}
     end
   end
 
@@ -130,21 +139,25 @@ defmodule Dsa.Worker do
     pid |> GenServer.call(msg)
   end
 
-  def handle(state, ~M{%Pbm.Dsa.Start2S pid,result} = msg) do
-    # Logger.warn("receive #{inspect(msg)}")
-
+  def handle(~M{%M room_id,battle_id} = state, ~M{%Pbm.Dsa.Start2S pid,result}) do
     if result == 0 do
-      # Logger.debug("the battle os pid is #{pid}")
+      Logger.debug("the battle os pid is #{pid},battle_id: #{battle_id}")
+
+      ~M{%Dc.BattleStarted2S room_id,battle_id}
+      |> PB.encode!()
+      |> IO.iodata_to_binary()
+      |> (&%Dc.RoomMsg2S{room_id: room_id, data: &1}).()
+      |> Dsa.Svr.send2dc()
+
       ~M{%M state| os_pid: pid}
     else
       Logger.warning("battle start fail!")
+      Dsa.Svr.end_game([battle_id, room_id])
       state
     end
   end
 
   def handle(~M{%M } = state, ~M{%Pbm.Dsa.BattleInfo2S battle_id} = _msg) do
-    # Logger.debug("receive #{inspect(msg)}")
-
     battle_info = %Pbm.Dsa.BattleInfo{
       auto_armor: true,
       kill_award_double: false,
@@ -169,12 +182,7 @@ defmodule Dsa.Worker do
     ~M{state| ready_states} |> check_start()
   end
 
-  def handle(
-        state,
-        ~M{%Pbm.Dsa.Heartbeat2S battle_id, pid, defender_score, attacker_score, online_players} =
-          msg
-      ) do
-    # Logger.warn("receive #{inspect(msg)}")
+  def handle(state, ~M{%Pbm.Dsa.Heartbeat2S }) do
     state
   end
 

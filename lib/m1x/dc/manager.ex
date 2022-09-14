@@ -7,6 +7,11 @@ defmodule Dc.Manager do
     call({func, args})
   end
 
+  def send_to_ds(battle_id, msg) do
+    {func, _} = __ENV__.function
+    call({func, [battle_id | msg]})
+  end
+
   @loop_interval 1000
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
@@ -81,17 +86,16 @@ defmodule Dc.Manager do
   def test_battle() do
     bot_ids = Bot.Manager.random_bot_by_type(1, 5)
 
-
     start_game([
       10_051_068,
       1,
       %{
-        1 => Enum.at(bot_ids,0),
-        2 => Enum.at(bot_ids,1),
-        3 => Enum.at(bot_ids,3),
+        1 => Enum.at(bot_ids, 0),
+        2 => Enum.at(bot_ids, 1),
+        3 => Enum.at(bot_ids, 3),
         4 => nil,
-        6 => Enum.at(bot_ids,4),
-        7 => Enum.at(bot_ids,5),
+        6 => Enum.at(bot_ids, 4),
+        7 => Enum.at(bot_ids, 5)
       }
     ])
   end

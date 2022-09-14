@@ -12,6 +12,16 @@ defmodule Dc do
     state
   end
 
+  def send_to_ds(~M{%Dc dsa_infos} = state, [battle_id, msg | _]) do
+    # TODO 后面取dsa_id的方式需要替换
+    with ~m{dsa_id} <- get_battle_info(battle_id),
+         {from, _, _} <- dsa_infos[dsa_id] do
+      Dc.Client.send2dsa(from, msg)
+    end
+
+    {:ok, state}
+  end
+
   def start_game(~M{%Dc dsa_infos,room_list} = state, [map_id, room_id, members | _]) do
     with {resources_left, dsa_id} when resources_left > 0 <- choose_dsa(state),
          {from, _, _} <- dsa_infos[dsa_id] do
@@ -27,6 +37,8 @@ defmodule Dc do
         end
 
       battle_id = GID.get_battle_id()
+      battle_start_time = Util.unixtime()
+      set_battle_info(battle_id, ~M{dsa_id,battle_start_time,room_id})
 
       Dc.Client.send2dsa(from, %Dc.StartGame2C{
         battle_id: battle_id,
@@ -42,6 +54,14 @@ defmodule Dc do
         Logger.error(err: inspect(err), label: "no_dsa_alivable")
         {:error, :no_dsa_alivable}
     end
+  end
+
+  def get_battle_info(battle_id) do
+    Redis.get("#{__MODULE__}:#{battle_id}")
+  end
+
+  def set_battle_info(battle_id, ~M{dsa_id,battle_start_time,room_id}) do
+    Redis.set("#{__MODULE__}:#{battle_id}", ~M{dsa_id,battle_start_time,room_id})
   end
 
   def h(

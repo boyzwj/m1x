@@ -238,6 +238,33 @@ defmodule Lobby.Room do
     {:ok, state}
   end
 
+  def ds_msg(~M{%M members } = state, ~M{%Dc.BattleStarted2S } = msg) do
+    for {_, role_id} <- members do
+      Role.Svr.execute(role_id, &Role.Mod.Battle.on_battle_started/2, msg)
+    end
+
+    {:ok, state}
+  end
+
+  def ds_msg(
+        ~M{%M room_type,ext} = state,
+        ~M{%Pbm.Dsa.PlayerQuit2S battle_id, player_id,reason} = msg
+      ) do
+    # TODO
+    Logger.debug("room receive ds msg #{inspect(msg)}")
+
+    # if room_type == @room_type_match do
+    #   # TODO 后续改到PlayerQuit
+    #   ~M{team_ids} = ext
+    #   Enum.each(team_ids, &Team.Svr.exit_battle(&1, [:battle_finish]))
+
+    #   ## 匹配临时房间战斗结束关闭
+    #   self() |> Process.send(:shutdown, [:nosuspend])
+    # end
+
+    {:ok, state}
+  end
+
   def ds_msg(state, msg) do
     broad_cast(msg)
     {:ok, state}
