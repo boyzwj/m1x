@@ -49,15 +49,15 @@ defmodule Role.Svr do
   end
 
   # 在角色进程执行模块回调函数
-  def excute_mod_fun(role_id_or_ids, mod_fun) do
-    excute_mod_fun(role_id_or_ids, mod_fun, [])
+  def execute_mod_fun(role_id_or_ids, mod_fun) do
+    execute_mod_fun(role_id_or_ids, mod_fun, [])
   end
 
-  def excute_mod_fun(role_id, mod_fun, args) when is_integer(role_id) do
-    excute_mod_fun([role_id], mod_fun, args)
+  def execute_mod_fun(role_id, mod_fun, args) when is_integer(role_id) do
+    execute_mod_fun([role_id], mod_fun, args)
   end
 
-  def excute_mod_fun(role_ids, mod_fun, args) when is_list(role_ids) do
+  def execute_mod_fun(role_ids, mod_fun, args) when is_list(role_ids) do
     for role_pid <- role_pids(role_ids) do
       Process.send(role_pid, {:callback_fun, mod_fun, args}, [:nosuspend])
     end

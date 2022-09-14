@@ -239,7 +239,7 @@ defmodule Team do
 
   defp sync(~M{%Team team_id, leader_id,mode,members,status} = state) do
     info = ~M{%Pbm.Team.BaseInfo  team_id,leader_id,mode,members,status}
-    Role.Svr.excute_mod_fun(role_ids(), &Role.Mod.Team.on_sync/2, info)
+    Role.Svr.execute_mod_fun(role_ids(), &Role.Mod.Team.on_sync/2, info)
     state
   end
 
