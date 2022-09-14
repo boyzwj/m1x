@@ -25,7 +25,9 @@ defmodule Dc do
 
           {v, ~M{%Dc.RoleInfo role_name,robot,robot_type,level,avatar_id}}
         end
-      battle_id = GID.get_battle_id()
+
+      battle_id = Dba.make_battle_id()
+
       Dc.Client.send2dsa(from, %Dc.StartGame2C{
         battle_id: battle_id,
         room_id: room_id,

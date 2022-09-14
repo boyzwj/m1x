@@ -1,11 +1,13 @@
 defmodule Tool.Benchmark do
   def test() do
+    data = %{id: 1001, mod: Role.Mod.Battle, data: "fuck"}
+
     Benchee.run(%{
-      "mnesia1" => fn ->
-        Dba.Mnesia.Api.dirty_read(Mnesia.Storage.RoleData, 1001)
+      "write" => fn ->
+        Dba.Mnesia.Api.write(data)
       end,
-      "mnesia2" => fn ->
-        Dba.Mnesia.Api.read(Mnesia.Storage.RoleData, 1001)
+      "dirty_write" => fn ->
+        Dba.Mnesia.Api.dirty_write(data)
       end
     })
   end

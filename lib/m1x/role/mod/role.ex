@@ -3,16 +3,16 @@ defmodule Role.Mod.Role do
   import Ecto.Changeset
 
   schema "role" do
-    field :role_id, :integer, default: nil
-    field :account, :string, default: ""
-    field :role_name, :string, default: ""
-    field :level, :integer, default: 1
-    field :gender, :integer, default: 1
-    field :head_id, :integer, default: 1
-    field :avatar_id, :integer, default: 1
-    field :rank, :integer, default: 0
-    field :create_time, :integer, default: 0
-    field :elo, :integer, default: 1000
+    field(:role_id, :integer, default: nil)
+    field(:account, :string, default: "")
+    field(:role_name, :string, default: "")
+    field(:level, :integer, default: 1)
+    field(:gender, :integer, default: 1)
+    field(:head_id, :integer, default: 1)
+    field(:avatar_id, :integer, default: 1)
+    field(:rank, :integer, default: 0)
+    field(:create_time, :integer, default: 0)
+    field(:elo, :integer, default: 1000)
   end
 
   def changeset(params), do: %__MODULE__{} |> changeset(params)

@@ -25,7 +25,7 @@ defmodule M1xWeb.GameDashboard do
   end
 
   def handle_event("cleardb", _params, socket) do
-    Redis.clearall()
+    Dba.clearall()
     :init.restart()
 
     socket =
