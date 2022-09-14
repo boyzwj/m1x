@@ -21,7 +21,7 @@ defmodule Role do
       PB.modules()
       |> Enum.reduce([], fn mod, acc ->
         if function_exported?(mod, :dirty?, 0) && mod.dirty?() do
-          data = mod.get_data() |> Map.from_struct() |> Jason.encode!()
+          data = mod.get_data() |> Map.from_struct() |> Map.delete(:__meta__) |> Jason.encode!()
           [mod, data | acc]
         else
           acc

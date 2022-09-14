@@ -83,15 +83,16 @@ defmodule Dsa do
         ~M{%Dsa workers,dsa_port,ds_socket} = state,
         ~M{%Dc.StartGame2C battle_id,room_id,map_id,members,infos}
       ) do
-    with {:ok, state, {host, out_port}} <- get_resource(state) do
-      args = [battle_id, ds_socket, room_id, map_id, members, infos, host, out_port, dsa_port]
-      {:ok, worker_pid} = DynamicSupervisor.start_child(Dsa.Worker.Sup, {Dsa.Worker, args})
+    with {:ok, state, {host, out_port}} <- get_resource(state),
+         args = [battle_id, ds_socket, room_id, map_id, members, infos, host, out_port, dsa_port],
+         {:ok, worker_pid} <- DynamicSupervisor.start_child(Dsa.Worker.Sup, {Dsa.Worker, args}) do
       now = Util.unixtime()
       workers = workers |> Map.put(battle_id, ~M{worker_pid, room_id, now,host, out_port})
       ~M{state| workers}
     else
       _ ->
         Logger.warning("Dsa has no resource ...")
+        send2dc(state, %Dc.StartBattleFail2S{room_id: room_id})
         state
     end
   end
@@ -109,7 +110,7 @@ defmodule Dsa do
   end
 
   def end_game(~M{%Dsa workers} = state, [battle_id, room_id]) do
-    # Logger.debug("game end battle_id : #{battle_id}")
+    Logger.debug("game end battle_id : #{battle_id}")
     send2dc(state, %Dc.BattleEnd2S{room_id: room_id})
 
     with ~M{host, port} <- Map.get(workers, battle_id) do

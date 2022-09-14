@@ -30,3 +30,7 @@ syntax = "proto3";
     uint32 room_id = 1;
     bytes data = 2;
   }
+
+  message StartBattleFail2S{
+    uint32 room_id = 1;
+  }
