@@ -8,9 +8,14 @@ defmodule Team.Sup do
   @impl true
 
   def init(_opts) do
-    Data.GameModeManage.ids()
-    |> Enum.map(&{Matcher.Svr, &1})
-    |> Enum.concat([
+    for mode <- Data.GameModeManage.ids() do
+      Horde.DynamicSupervisor.start_child(
+        Matrix.DistributedSupervisor,
+        {Matcher.Svr, mode}
+      )
+    end
+
+    [
       {Team.Manager, []},
       {DynamicSupervisor,
        [
@@ -18,7 +23,7 @@ defmodule Team.Sup do
          shutdown: 1000,
          strategy: :one_for_one
        ]}
-    ])
+    ]
     |> Supervisor.init(strategy: :one_for_one)
   end
 end

@@ -70,7 +70,7 @@ defmodule Matcher.Svr do
   end
 
   defp via(mode) do
-    {:via, Horde.Registry, {Matrix.DBRegistry, mode}}
+    {:via, Horde.Registry, {Matrix.GlobalRegistry, {__MODULE__, mode}}}
   end
 
   @impl true

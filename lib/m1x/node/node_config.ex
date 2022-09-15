@@ -26,7 +26,7 @@ defmodule NodeConfig do
          shutdown: 1000,
          strategy: :one_for_one
        ]},
-      {Horde.Registry, [name: Matrix.DBRegistry, keys: :unique, members: :auto]},
+      {Horde.Registry, [name: Matrix.GlobalRegistry, keys: :unique, members: :auto]},
       {
         Horde.DynamicSupervisor,
         [
@@ -50,7 +50,7 @@ defmodule NodeConfig do
       {Lobby.Sup, []},
       {Dc.Sup, []},
       {Team.Sup, []},
-      # {Dba.Mnesia.Sup ,[]}
+      {Dba.Mnesia.Sup, []}
     ]
   end
 
@@ -60,7 +60,7 @@ defmodule NodeConfig do
 
     [
       {Cluster.Supervisor, [topologies, [name: Matrix.ClusterSupervisor]]},
-      {Horde.Registry, [name: Matrix.DBRegistry, keys: :unique, members: :auto]},
+      {Horde.Registry, [name: Matrix.GlobalRegistry, keys: :unique, members: :auto]},
       {GateWay.ListenerSup, []}
     ]
   end
@@ -79,7 +79,7 @@ defmodule NodeConfig do
     FastGlobal.put(:block_id, block_id)
 
     [
-      {Horde.Registry, [name: Matrix.DBRegistry, keys: :unique, members: :auto]},
+      {Horde.Registry, [name: Matrix.GlobalRegistry, keys: :unique, members: :auto]},
       {DynamicSupervisor,
        [
          name: Redis.Sup,
@@ -112,7 +112,7 @@ defmodule NodeConfig do
       {Dc.Sup, []},
       {Bot.Sup, []},
       {Team.Sup, []},
-      {Dba.Mnesia.Sup ,[]}
+      {Dba.Mnesia.Sup, []}
     ]
   end
 
