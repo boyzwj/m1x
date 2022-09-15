@@ -24,7 +24,11 @@ defmodule Dba.Redis.Api do
   end
 
   def get_account_info(token) do
-    Redis.get("account:#{token}")
+    if res = Redis.get("account:#{token}") do
+      String.to_integer(res)
+    else
+      nil
+    end
   end
 
   def set_account_info(token, role_id) do

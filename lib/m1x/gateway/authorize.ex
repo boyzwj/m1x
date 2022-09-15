@@ -24,7 +24,7 @@ defmodule Authorize do
     data = Dba.get_account_info(token)
 
     if data do
-      Jason.decode(data)
+      {:ok, data}
     else
       role_id = Dba.make_role_id()
       Dba.set_account_info(token, role_id)

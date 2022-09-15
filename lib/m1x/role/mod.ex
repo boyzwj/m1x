@@ -16,7 +16,7 @@ defmodule Role.Mod do
       end
 
       def load(role_id) do
-        data = Dba.get_role_data(__MODULE__, role_id)
+        data = Dba.load_role_data(__MODULE__, role_id)
         data && Poison.decode!(data, as: %__MODULE__{})
       end
 
