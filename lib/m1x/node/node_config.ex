@@ -7,15 +7,18 @@ defmodule NodeConfig do
            |> String.split("@")
            |> List.first()
            |> String.split("_") do
-      services(node_type, String.to_integer(node_id))
+      block_id = String.to_integer(node_id)
+      FastGlobal.put(:block_id, block_id)
+      services(node_type, block_id)
     else
       _ ->
-        services("develop", 1)
+        block_id = 1
+        FastGlobal.put(:block_id, block_id)
+        services("develop", block_id)
     end
   end
 
-  def services("game", block_id) do
-    FastGlobal.put(:block_id, block_id)
+  def services("game", _block_id) do
     topologies = Application.get_env(:m1x, :topologies)
 
     [
@@ -36,26 +39,23 @@ defmodule NodeConfig do
           members: :auto
         ]
       },
-      {Horde.Registry, [name: Matrix.RankRegistry, keys: :unique, members: :auto]},
       {Horde.DynamicSupervisor,
        [name: Matrix.RankSupervisor, strategy: :one_for_one, members: :auto]},
       {Rank.Sup, []},
       {Bot.Sup, []},
-      {Horde.Registry, [name: Matrix.MailRegistry, keys: :unique, members: :auto]},
       {Horde.DynamicSupervisor,
        [name: Matrix.MailSupervisor, strategy: :one_for_one, members: :auto]},
       {Mail.Manager, []},
       {Role.Sup, []},
-      {Redis.Manager, []},
       {Lobby.Sup, []},
       {Dc.Sup, []},
       {Team.Sup, []},
+      {Global.Sup, []},
       {Dba.Mnesia.Sup, []}
     ]
   end
 
-  def services("gate", block_id) do
-    FastGlobal.put(:block_id, block_id)
+  def services("gate", _block_id) do
     topologies = Application.get_env(:m1x, :topologies)
 
     [
@@ -65,19 +65,15 @@ defmodule NodeConfig do
     ]
   end
 
-  def services("robot", block_id) do
-    FastGlobal.put(:block_id, block_id)
+  def services("robot", _block_id) do
     [Robot.Sup, Robot.Manager]
   end
 
-  def services("dsa", block_id) do
-    FastGlobal.put(:block_id, block_id)
+  def services("dsa", _block_id) do
     [{Dsa.Sup, []}]
   end
 
-  def services("develop", block_id) do
-    FastGlobal.put(:block_id, block_id)
-
+  def services("develop", _block_id) do
     [
       {Horde.Registry, [name: Matrix.GlobalRegistry, keys: :unique, members: :auto]},
       {DynamicSupervisor,
@@ -95,16 +91,13 @@ defmodule NodeConfig do
           members: :auto
         ]
       },
-      {Horde.Registry, [name: Matrix.RankRegistry, keys: :unique, members: :auto]},
       {Horde.DynamicSupervisor,
        [name: Matrix.RankSupervisor, strategy: :one_for_one, members: :auto]},
       {Rank.Sup, []},
-      {Horde.Registry, [name: Matrix.MailRegistry, keys: :unique, members: :auto]},
       {Horde.DynamicSupervisor,
        [name: Matrix.MailSupervisor, strategy: :one_for_one, members: :auto]},
       {Mail.Manager, []},
       {Role.Sup, []},
-      {Redis.Manager, []},
       {Lobby.Sup, []},
       # {Dsa.Sup, []},
       # {Api.Sup, []},
@@ -112,6 +105,7 @@ defmodule NodeConfig do
       {Dc.Sup, []},
       {Bot.Sup, []},
       {Team.Sup, []},
+      {Global.Sup, []},
       {Dba.Mnesia.Sup, []}
     ]
   end

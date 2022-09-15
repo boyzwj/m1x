@@ -118,7 +118,7 @@ defmodule Mail.Global do
     :ok
   end
 
-  def via_tuple(), do: {:via, Horde.Registry, {Matrix.MailRegistry, __MODULE__}}
+  def via_tuple(), do: {:via, Horde.Registry, {Matrix.GlobalRegistry, __MODULE__}}
 
   # desc
   defp load_mails() do

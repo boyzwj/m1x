@@ -1,4 +1,4 @@
-defmodule Rank.Sup do
+defmodule Global.Sup do
   use Supervisor
 
   def start_link(args) do
@@ -8,7 +8,7 @@ defmodule Rank.Sup do
   @impl true
   def init(_opts) do
     children = [
-      {Rank.LocalManager, [{Rank.Test2, []}]}
+      {Global.Manager, []}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

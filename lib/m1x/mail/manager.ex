@@ -12,19 +12,18 @@ defmodule Mail.Manager do
   end
 
   @impl true
-  def init(args) do
+  def init(_args) do
     Logger.debug("Mail manager start")
-    interval = Util.rand(1, 100)
-    Process.send_after(self(), {:start_worker, args}, interval)
+    # interval = Util.rand(1, 100)
+    # Process.send_after(self(), {:start_worker, args}, interval)
     :pg.join(__MODULE__, self())
     {:ok, {}}
   end
 
-  @impl true
-  def handle_info({:start_worker, _}, state) do
-    Horde.DynamicSupervisor.start_child(Matrix.MailSupervisor, {Mail.Global, []})
-    {:noreply, state}
-  end
+  # @impl true
+  # def handle_info({:start_worker, _}, state) do
+  #   {:noreply, state}
+  # end
 
   @impl true
   def handle_cast({:clear_cache, mod, fun, args}, state) do

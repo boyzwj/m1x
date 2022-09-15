@@ -98,7 +98,7 @@ defmodule Rank do
             |> Map.put(:is_dirty, true)
 
           if @is_global do
-            Rank.GlobalManager.clear_cache(__MODULE__, :slice, :_)
+            Global.Manager.clear_cache(__MODULE__, :slice, :_)
           else
             Memoize.invalidate(__MODULE__, :slice)
           end
@@ -132,7 +132,7 @@ defmodule Rank do
             |> Map.put(:is_dirty, true)
 
           if @is_global do
-            Rank.GlobalManager.clear_cache(__MODULE__, :slice, :_)
+            Global.Manager.clear_cache(__MODULE__, :slice, :_)
           else
             Memoize.invalidate(__MODULE__, :slice)
           end
@@ -210,7 +210,7 @@ defmodule Rank do
         :ok
       end
 
-      def via_tuple(true), do: {:via, Horde.Registry, {Matrix.RankRegistry, __MODULE__}}
+      def via_tuple(true), do: {:via, Horde.Registry, {Matrix.GlobalRegistry, __MODULE__}}
       def via_tuple(_), do: __MODULE__
 
       defp key() do

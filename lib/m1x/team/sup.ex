@@ -8,13 +8,6 @@ defmodule Team.Sup do
   @impl true
 
   def init(_opts) do
-    for mode <- Data.GameModeManage.ids() do
-      Horde.DynamicSupervisor.start_child(
-        Matrix.DistributedSupervisor,
-        {Matcher.Svr, mode}
-      )
-    end
-
     [
       {Team.Manager, []},
       {DynamicSupervisor,
