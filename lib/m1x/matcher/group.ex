@@ -1,4 +1,4 @@
-defmodule Team.Matcher.Group do
+defmodule Matcher.Group do
   defstruct token: nil,
             base_id: 0,
             type: 0,
@@ -11,9 +11,9 @@ defmodule Team.Matcher.Group do
             match_time: 0
 
   use Common
-  alias Team.Matcher.Group
-  alias Team.Matcher.Pool
-  alias Team.Matcher.Team, as: MTeam
+  alias Matcher.Group
+  alias Matcher.Pool
+  alias Matcher.Team, as: MTeam
   @type_single 1
   @type_team 2
   @type_mix 3
@@ -300,7 +300,7 @@ defmodule Team.Matcher.Group do
 
   def begin_to_start(~M{%__MODULE__  all_role_ids,token,side1,side2}) do
     # map_id = 10_051_068
-    map_id = Team.Matcher.random_map_id()
+    map_id = Matcher.random_map_id()
 
     team_ids = (side1 ++ side2) |> Enum.map(& &1.team_id)
     ext = ~M{team_ids}

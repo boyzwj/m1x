@@ -9,7 +9,7 @@ defmodule Team.Sup do
 
   def init(_opts) do
     Data.GameModeManage.ids()
-    |> Enum.map(&{Team.Matcher.Svr, &1})
+    |> Enum.map(&{Matcher.Svr, &1})
     |> Enum.concat([
       {Team.Manager, []},
       {DynamicSupervisor,

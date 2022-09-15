@@ -1,10 +1,10 @@
-defmodule Team.Matcher do
+defmodule Matcher do
   defstruct team_ids: nil, pool_ids: nil, now: 0
   use Common
-  alias Team.Matcher
-  alias Team.Matcher.Pool
-  alias Team.Matcher.Team, as: MTeam
-  alias Team.Matcher.Group
+  alias Matcher
+  alias Matcher.Pool
+  alias Matcher.Team, as: MTeam
+  alias Matcher.Group
   @max_team_member_count 5
   @loop_interval 1000
 
@@ -18,7 +18,7 @@ defmodule Team.Matcher do
     Process.send_after(self(), :loop, @loop_interval)
     pool_ids = init_pool()
     Process.put({__MODULE__, :mode}, mode)
-    %Team.Matcher{pool_ids: pool_ids, now: Util.unixtime(), team_ids: MapSet.new()}
+    %Matcher{pool_ids: pool_ids, now: Util.unixtime(), team_ids: MapSet.new()}
   end
 
   @spec random_map_id :: integer()
@@ -195,25 +195,25 @@ defmodule Team.Matcher do
 
   def test3() do
     robot_ids = Bot.Manager.random_bot_by_type(2, 10)
-    Team.Matcher.Svr.join(1002, [101, Enum.slice(robot_ids, 0, 1), 1600, false])
-    Team.Matcher.Svr.join(1002, [102, Enum.slice(robot_ids, 1, 4), 1670, false])
-    Team.Matcher.Svr.join(1002, [103, Enum.slice(robot_ids, 5, 1), 1650, false])
-    Team.Matcher.Svr.join(1002, [104, Enum.slice(robot_ids, 6, 4), 1500, false])
+    Matcher.Svr.join(1002, [101, Enum.slice(robot_ids, 0, 1), 1600, false])
+    Matcher.Svr.join(1002, [102, Enum.slice(robot_ids, 1, 4), 1670, false])
+    Matcher.Svr.join(1002, [103, Enum.slice(robot_ids, 5, 1), 1650, false])
+    Matcher.Svr.join(1002, [104, Enum.slice(robot_ids, 6, 4), 1500, false])
   end
 
   def test_reply() do
     robot_ids = Bot.Manager.random_bot_by_type(2, 10)
-    Team.Matcher.Svr.ready_match(1002, [101, Enum.at(robot_ids, 0), 1])
-    Team.Matcher.Svr.ready_match(1002, [102, Enum.at(robot_ids, 1), 1])
-    Team.Matcher.Svr.ready_match(1002, [102, Enum.at(robot_ids, 2), 1])
-    Team.Matcher.Svr.ready_match(1002, [102, Enum.at(robot_ids, 3), 1])
-    Team.Matcher.Svr.ready_match(1002, [102, Enum.at(robot_ids, 4), 1])
+    Matcher.Svr.ready_match(1002, [101, Enum.at(robot_ids, 0), 1])
+    Matcher.Svr.ready_match(1002, [102, Enum.at(robot_ids, 1), 1])
+    Matcher.Svr.ready_match(1002, [102, Enum.at(robot_ids, 2), 1])
+    Matcher.Svr.ready_match(1002, [102, Enum.at(robot_ids, 3), 1])
+    Matcher.Svr.ready_match(1002, [102, Enum.at(robot_ids, 4), 1])
 
-    Team.Matcher.Svr.ready_match(1002, [103, Enum.at(robot_ids, 5), 1])
-    Team.Matcher.Svr.ready_match(1002, [104, Enum.at(robot_ids, 6), 1])
-    Team.Matcher.Svr.ready_match(1002, [104, Enum.at(robot_ids, 7), 1])
-    Team.Matcher.Svr.ready_match(1002, [104, Enum.at(robot_ids, 8), 1])
-    Team.Matcher.Svr.ready_match(1002, [104, Enum.at(robot_ids, 9), 1])
+    Matcher.Svr.ready_match(1002, [103, Enum.at(robot_ids, 5), 1])
+    Matcher.Svr.ready_match(1002, [104, Enum.at(robot_ids, 6), 1])
+    Matcher.Svr.ready_match(1002, [104, Enum.at(robot_ids, 7), 1])
+    Matcher.Svr.ready_match(1002, [104, Enum.at(robot_ids, 8), 1])
+    Matcher.Svr.ready_match(1002, [104, Enum.at(robot_ids, 9), 1])
   end
 
   def test4() do
@@ -223,8 +223,8 @@ defmodule Team.Matcher do
     Team.Svr.name(1001) |> :global.whereis_name() |> :sys.get_state()
     Role.Mod.Team.load(100_000_001)
     robot_ids = Bot.Manager.random_bot_by_type(2, 10)
-    Team.Matcher.Svr.join(1002, [101, Enum.slice(robot_ids, 0, 1), 1600, false])
+    Matcher.Svr.join(1002, [101, Enum.slice(robot_ids, 0, 1), 1600, false])
     Process.sleep(1000)
-    Team.Matcher.Svr.cancel_match(1002, [101])
+    Matcher.Svr.cancel_match(1002, [101])
   end
 end

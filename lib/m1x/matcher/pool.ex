@@ -1,4 +1,4 @@
-defmodule Team.Matcher.Pool do
+defmodule Matcher.Pool do
   defstruct id: 0,
             base_id: 0,
             type: 0,
@@ -7,9 +7,9 @@ defmodule Team.Matcher.Pool do
 
   use Common
   alias Discord.SortedSet
-  alias Team.Matcher.Pool
-  alias Team.Matcher.Group
-  alias Team.Matcher.Team, as: MTeam
+  alias Matcher.Pool
+  alias Matcher.Group
+  alias Matcher.Team, as: MTeam
 
   @type_single 1
   @type_team 2

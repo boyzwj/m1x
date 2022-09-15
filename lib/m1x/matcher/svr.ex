@@ -1,4 +1,4 @@
-defmodule Team.Matcher.Svr do
+defmodule Matcher.Svr do
   use GenServer
   use Common
 
@@ -44,7 +44,7 @@ defmodule Team.Matcher.Svr do
   @impl true
   def handle_call({func, args}, _from, state) do
     try do
-      {reply, state} = apply(Team.Matcher, func, [state, args])
+      {reply, state} = apply(Matcher, func, [state, args])
       {:reply, reply, state}
     catch
       error ->
@@ -54,7 +54,7 @@ defmodule Team.Matcher.Svr do
 
   @impl true
   def handle_info(:loop, state) do
-    state = Team.Matcher.loop(state)
+    state = Matcher.loop(state)
     {:noreply, state}
   end
 
@@ -75,7 +75,7 @@ defmodule Team.Matcher.Svr do
 
   @impl true
   def init(args) do
-    state = Team.Matcher.init(args)
+    state = Matcher.init(args)
     {:ok, state}
   end
 
