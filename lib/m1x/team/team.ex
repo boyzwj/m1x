@@ -116,7 +116,7 @@ defmodule Team do
 
     avg_elo = get_avg_elo(state)
     role_ids = Map.values(members)
-    Team.Matcher.Svr.join(mode, [team_id, role_ids, avg_elo, false])
+    Matcher.Svr.join(mode, [team_id, role_ids, avg_elo, false])
 
     ~M{state| status: @status_matching}
     |> sync_role_status(:begin_match)
