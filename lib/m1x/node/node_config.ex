@@ -8,13 +8,16 @@ defmodule NodeConfig do
            |> List.first()
            |> String.split("_") do
       block_id = String.to_integer(node_id)
-      FastGlobal.put(:block_id, block_id)
+      Node.Misc.set_block_id(block_id)
+      Node.Misc.set_node_type(node_type)
       services(node_type, block_id)
     else
       _ ->
         block_id = 1
-        FastGlobal.put(:block_id, block_id)
-        services("develop", block_id)
+        node_type = "develop"
+        Node.Misc.set_block_id(block_id)
+        Node.Misc.set_node_type(node_type)
+        services(node_type, block_id)
     end
   end
 
@@ -23,12 +26,6 @@ defmodule NodeConfig do
 
     [
       {Cluster.Supervisor, [topologies, [name: Matrix.ClusterSupervisor]]},
-      {DynamicSupervisor,
-       [
-         name: Redis.Sup,
-         shutdown: 1000,
-         strategy: :one_for_one
-       ]},
       {Horde.Registry, [name: Matrix.GlobalRegistry, keys: :unique, members: :auto]},
       {
         Horde.DynamicSupervisor,
@@ -76,12 +73,6 @@ defmodule NodeConfig do
   def services("develop", _block_id) do
     [
       {Horde.Registry, [name: Matrix.GlobalRegistry, keys: :unique, members: :auto]},
-      {DynamicSupervisor,
-       [
-         name: Redis.Sup,
-         shutdown: 1000,
-         strategy: :one_for_one
-       ]},
       {
         Horde.DynamicSupervisor,
         [

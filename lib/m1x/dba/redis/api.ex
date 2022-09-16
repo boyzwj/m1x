@@ -36,7 +36,7 @@ defmodule Dba.Redis.Api do
   end
 
   def make_role_id() do
-    block_id = FastGlobal.get(:block_id, 1)
+    block_id = Node.Misc.block_id()
     block_id * 100_000_000 + Redis.incr("role_id:#{block_id}")
   end
 

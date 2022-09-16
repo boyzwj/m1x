@@ -10,7 +10,8 @@ defmodule GateWay.ListenerSup do
     port = String.to_integer(System.get_env("PORT") || "4001")
 
     children = [
-      {GateWay.GameListener, port: port}
+      {GateWay.GameListener, port: port},
+      {Gateway.Manager, []}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

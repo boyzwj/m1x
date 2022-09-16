@@ -42,6 +42,13 @@ defmodule Global.Manager do
   end
 
   defp start_global() do
+    Logger.info("start global dba manaer")
+
+    Horde.DynamicSupervisor.start_child(
+      Matrix.DistributedSupervisor,
+      {Dba.Manager, []}
+    )
+
     Logger.info("start global redis")
 
     for worker_id <- 1..Application.get_env(:m1x, :db_worker_num, 8) do

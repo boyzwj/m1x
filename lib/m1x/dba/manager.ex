@@ -1,4 +1,4 @@
-defmodule Node.Manager do
+defmodule Dba.Manager do
   use GenServer
   use Common
   defstruct db_nodes: []
@@ -37,6 +37,16 @@ defmodule Node.Manager do
   end
 
   @impl true
+
+  def handle_call(:get_mnesia_nodes, _from, %__MODULE__{db_nodes: db_nodes} = state) do
+    {:reply, db_nodes, state}
+  end
+
+  def handle_call({:regist_mnesia, node}, _from, %__MODULE__{db_nodes: db_nodes} = state) do
+    db_nodes = [node | db_nodes]
+    {:reply, :ok, %{state | db_nodes: db_nodes}}
+  end
+
   def handle_call(args, _from, state) do
     Logger.warn("receive unhandle call : #{inspect(args)}")
     reply = :error

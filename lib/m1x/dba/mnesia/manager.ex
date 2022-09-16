@@ -2,16 +2,6 @@ defmodule Dba.Mnesia.Manager do
   require Logger
   alias Memento.Table
 
-  def initialize(db_list) do
-    case db_list do
-      [] ->
-        create_database(db_list)
-
-      _ ->
-        copy_database(db_list)
-    end
-  end
-
   def create_database(_store_list) do
     Logger.info("Creating database...")
     Memento.stop()
@@ -19,7 +9,6 @@ defmodule Dba.Mnesia.Manager do
     Memento.start()
     :mnesia_monitor.set_env(:dump_log_write_threshold, 50000)
     :mnesia_monitor.set_env(:dc_dump_limit, 40)
-    # :mnesia_rocksdb.register()
     :mnesia_eleveldb.register()
     create_tables()
   end
@@ -68,7 +57,9 @@ defmodule Dba.Mnesia.Manager do
 
   def copy_database(store_list) do
     Memento.start()
-    :mnesia_rocksdb.register()
+    :mnesia_monitor.set_env(:dump_log_write_threshold, 50000)
+    :mnesia_monitor.set_env(:dc_dump_limit, 40)
+    :mnesia_eleveldb.register()
     {:ok, _} = Memento.add_nodes(store_list)
     Table.set_storage_type(:schema, node(), :disc_copies)
     copy_tables()
@@ -79,7 +70,7 @@ defmodule Dba.Mnesia.Manager do
 
     for {tab, _attributes, type} <- Dba.Mnesia.Def.role_tables() do
       :mnesia.add_table_copy(tab, node(), type)
-      Logger.info("Load exist table [#{inspect(tab)}] ", ansi_color: :yellow)
+      Logger.info("copy table [#{inspect(tab)}] ", ansi_color: :yellow)
     end
 
     for {tab, type} <- Dba.Mnesia.Def.tables() do
@@ -87,7 +78,7 @@ defmodule Dba.Mnesia.Manager do
         Logger.info("copy table [#{inspect(tab)}] finish", ansi_color: :yellow)
       else
         {:error, {:already_exists, _, _}} ->
-          Logger.info("Load exist table [#{inspect(tab)}] ", ansi_color: :yellow)
+          Logger.info("check update exist table [#{inspect(tab)}] ", ansi_color: :yellow)
           check_update_table(tab)
 
         {:error, {:no_exists, {^tab, _}}} ->
