@@ -202,7 +202,7 @@ defmodule Redis do
   end
 
   defp via(worker_id) do
-    {:via, Horde.Registry, {Matrix.DBRegistry, worker_id}}
+    {:via, Horde.Registry, {Matrix.GlobalRegistry, {__MODULE__, worker_id}}}
   end
 
   defp select_call(cmd, []) do

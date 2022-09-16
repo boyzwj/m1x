@@ -73,7 +73,7 @@ defmodule M1x.MixProject do
       {:petal_components, "~> 0.17.6"},
       {:hut, "~> 1.4", manager: :rebar3, override: true},
       {:memento, "~> 0.3.2"},
-      {:mnesia_rocksdb, git: "https://github.com/aeternity/mnesia_rocksdb.git", tag: "master"}
+      {:mnesia_eleveldb, git: "https://github.com/klarna/mnesia_eleveldb.git", tag: "master"}
     ]
   end
 

@@ -21,17 +21,16 @@ defmodule Authorize do
       throw("登录token长度太长")
     end
 
-    data = Redis.get("account:#{token}")
+    data = Dba.get_account_info(token)
 
     if data do
-      Jason.decode(data)
+      {:ok, data}
     else
-      role_id = GID.get_role_id()
-      Redis.set("account:#{token}", role_id)
-      dbkey = Role.Misc.dbkey(role_id)
+      role_id = Dba.make_role_id()
+      Dba.set_account_info(token, role_id)
       create_time = Util.unixtime()
 
-      Redis.hset(dbkey, Role.Mod.Role, %{
+      Dba.save_role_data(%Role.Mod.Role{
         role_id: role_id,
         account: token,
         role_name: token,

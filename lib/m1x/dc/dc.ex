@@ -40,7 +40,7 @@ defmodule Dc do
           {v, ~M{%Dc.RoleInfo role_name,robot,robot_type,level,avatar_id}}
         end
 
-      battle_id = GID.get_battle_id()
+      battle_id = Dba.make_battle_id()
       battle_start_time = Util.unixtime()
       set_battle_info(battle_id, ~M{dsa_id,battle_start_time,room_id})
 

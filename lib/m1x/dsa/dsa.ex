@@ -39,7 +39,7 @@ defmodule Dsa do
     dc_port = Application.get_env(:m1x, :dc_port, 20001)
 
     %Dsa{
-      id: FastGlobal.get(:block_id),
+      id: Node.Misc.block_id(),
       dsa_port: dsa_port,
       ds_socket: ds_socket,
       resources: resources,

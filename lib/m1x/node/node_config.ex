@@ -7,26 +7,26 @@ defmodule NodeConfig do
            |> String.split("@")
            |> List.first()
            |> String.split("_") do
-      services(node_type, String.to_integer(node_id))
+      block_id = String.to_integer(node_id)
+      Node.Misc.set_block_id(block_id)
+      Node.Misc.set_node_type(node_type)
+      services(node_type, block_id)
     else
       _ ->
-        services("develop", 1)
+        block_id = 1
+        node_type = "develop"
+        Node.Misc.set_block_id(block_id)
+        Node.Misc.set_node_type(node_type)
+        services(node_type, block_id)
     end
   end
 
-  def services("game", block_id) do
-    FastGlobal.put(:block_id, block_id)
+  def services("game", _block_id) do
     topologies = Application.get_env(:m1x, :topologies)
 
     [
       {Cluster.Supervisor, [topologies, [name: Matrix.ClusterSupervisor]]},
-      {DynamicSupervisor,
-       [
-         name: Redis.Sup,
-         shutdown: 1000,
-         strategy: :one_for_one
-       ]},
-      {Horde.Registry, [name: Matrix.DBRegistry, keys: :unique, members: :auto]},
+      {Horde.Registry, [name: Matrix.GlobalRegistry, keys: :unique, members: :auto]},
       {
         Horde.DynamicSupervisor,
         [
@@ -36,56 +36,43 @@ defmodule NodeConfig do
           members: :auto
         ]
       },
-      {Horde.Registry, [name: Matrix.RankRegistry, keys: :unique, members: :auto]},
       {Horde.DynamicSupervisor,
        [name: Matrix.RankSupervisor, strategy: :one_for_one, members: :auto]},
       {Rank.Sup, []},
       {Bot.Sup, []},
-      {Horde.Registry, [name: Matrix.MailRegistry, keys: :unique, members: :auto]},
       {Horde.DynamicSupervisor,
        [name: Matrix.MailSupervisor, strategy: :one_for_one, members: :auto]},
       {Mail.Manager, []},
       {Role.Sup, []},
-      {Redis.Manager, []},
       {Lobby.Sup, []},
       {Dc.Sup, []},
       {Team.Sup, []},
-      # {Dba.Mnesia.Sup ,[]}
+      {Global.Sup, []},
+      {Dba.Mnesia.Sup, []}
     ]
   end
 
-  def services("gate", block_id) do
-    FastGlobal.put(:block_id, block_id)
+  def services("gate", _block_id) do
     topologies = Application.get_env(:m1x, :topologies)
 
     [
       {Cluster.Supervisor, [topologies, [name: Matrix.ClusterSupervisor]]},
-      {Horde.Registry, [name: Matrix.DBRegistry, keys: :unique, members: :auto]},
+      {Horde.Registry, [name: Matrix.GlobalRegistry, keys: :unique, members: :auto]},
       {GateWay.ListenerSup, []}
     ]
   end
 
-  def services("robot", block_id) do
-    FastGlobal.put(:block_id, block_id)
+  def services("robot", _block_id) do
     [Robot.Sup, Robot.Manager]
   end
 
-  def services("dsa", block_id) do
-    FastGlobal.put(:block_id, block_id)
+  def services("dsa", _block_id) do
     [{Dsa.Sup, []}]
   end
 
-  def services("develop", block_id) do
-    FastGlobal.put(:block_id, block_id)
-
+  def services("develop", _block_id) do
     [
-      {Horde.Registry, [name: Matrix.DBRegistry, keys: :unique, members: :auto]},
-      {DynamicSupervisor,
-       [
-         name: Redis.Sup,
-         shutdown: 1000,
-         strategy: :one_for_one
-       ]},
+      {Horde.Registry, [name: Matrix.GlobalRegistry, keys: :unique, members: :auto]},
       {
         Horde.DynamicSupervisor,
         [
@@ -95,16 +82,13 @@ defmodule NodeConfig do
           members: :auto
         ]
       },
-      {Horde.Registry, [name: Matrix.RankRegistry, keys: :unique, members: :auto]},
       {Horde.DynamicSupervisor,
        [name: Matrix.RankSupervisor, strategy: :one_for_one, members: :auto]},
       {Rank.Sup, []},
-      {Horde.Registry, [name: Matrix.MailRegistry, keys: :unique, members: :auto]},
       {Horde.DynamicSupervisor,
        [name: Matrix.MailSupervisor, strategy: :one_for_one, members: :auto]},
       {Mail.Manager, []},
       {Role.Sup, []},
-      {Redis.Manager, []},
       {Lobby.Sup, []},
       # {Dsa.Sup, []},
       # {Api.Sup, []},
@@ -112,7 +96,8 @@ defmodule NodeConfig do
       {Dc.Sup, []},
       {Bot.Sup, []},
       {Team.Sup, []},
-      {Dba.Mnesia.Sup ,[]}
+      {Global.Sup, []},
+      {Dba.Mnesia.Sup, []}
     ]
   end
 

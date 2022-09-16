@@ -1,4 +1,4 @@
-defmodule Team.Matcher.Team do
+defmodule Matcher.Team do
   defstruct team_id: 0,
             token: nil,
             member_num: 0,
@@ -25,7 +25,7 @@ defmodule Team.Matcher.Team do
   @status_waiting 0
   @status_matched 1
 
-  alias Team.Matcher.Pool
+  alias Matcher.Pool
 
   def new(~M{team_id,member_num,role_ids,avg_elo,match_time,pool_id}) do
     status = @status_waiting
@@ -203,7 +203,7 @@ defmodule Team.Matcher.Team do
       end)
     else
       _ ->
-      {:error,"队伍信息异常"}
+        {:error, "队伍信息异常"}
     end
   end
 end

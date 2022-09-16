@@ -8,11 +8,11 @@ defmodule M1xWeb.Matchingpool do
     import Ecto.Changeset
 
     schema "add_role" do
-      field :mode, :integer
-      field :team_id, :integer
-      field :role_ids, {:array, :integer}
-      field :avg_elo, :integer
-      field :warm, :boolean
+      field(:mode, :integer)
+      field(:team_id, :integer)
+      field(:role_ids, {:array, :integer})
+      field(:avg_elo, :integer)
+      field(:warm, :boolean)
     end
 
     def changeset(struct, %{} = params) when map_size(params) == 0 do
@@ -37,7 +37,7 @@ defmodule M1xWeb.Matchingpool do
     def validate_elo(changeset) do
       with ~M{avg_elo} <- changeset.changes,
            true <-
-             Team.Matcher.Pool.get_base_id_by_elo(avg_elo) != nil ||
+             Matcher.Pool.get_base_id_by_elo(avg_elo) != nil ||
                {:error, "avg_elo not in range"} do
         changeset
       else
@@ -120,7 +120,7 @@ defmodule M1xWeb.Matchingpool do
 
     with %Ecto.Changeset{errors: [], changes: changes} <- changeset,
          ~M{avg_elo,role_ids,team_id,warm,mode} <- changes do
-      Team.Matcher.Svr.join(mode, [team_id, role_ids, avg_elo, warm])
+      Matcher.Svr.join(mode, [team_id, role_ids, avg_elo, warm])
 
       socket
       |> put_flash(:info, "添加成功")
@@ -241,7 +241,7 @@ defmodule M1xWeb.Matchingpool do
 
   defp filter_by_team_id(infos, team_id) when is_integer(team_id) do
     infos
-    |> Enum.filter(fn ~M{%Team.Matcher.Pool team_list} ->
+    |> Enum.filter(fn ~M{%Matcher.Pool team_list} ->
       Enum.member?(team_list, team_id)
     end)
   end
@@ -250,14 +250,14 @@ defmodule M1xWeb.Matchingpool do
 
   defp filter_by_team_type(infos, team_type) do
     infos
-    |> Enum.filter(fn ~M{%Team.Matcher.Pool type} ->
+    |> Enum.filter(fn ~M{%Matcher.Pool type} ->
       "#{type}" == team_type
     end)
   end
 
   defp list_pool_infos(active_mode) do
-    Team.Matcher.Svr.get_pool_infos(active_mode, [])
-    |> Enum.map(fn %Team.Matcher.Pool{team_list: team_list} = pool ->
+    Matcher.Svr.get_pool_infos(active_mode, [])
+    |> Enum.map(fn %Matcher.Pool{team_list: team_list} = pool ->
       team_list =
         for {_, _, team_id} <- Discord.SortedSet.to_list(team_list) do
           team_id
@@ -269,8 +269,8 @@ defmodule M1xWeb.Matchingpool do
 
   def assign_group_infos(%Socket{assigns: %{active_mode: active_mode}} = socket) do
     group_infos =
-      Team.Matcher.Svr.get_group_infos(active_mode, [])
-      |> Enum.map(fn %Team.Matcher.Group{side1: side1, side2: side2, all_role_ids: all_role_ids} =
+      Matcher.Svr.get_group_infos(active_mode, [])
+      |> Enum.map(fn %Matcher.Group{side1: side1, side2: side2, all_role_ids: all_role_ids} =
                        group ->
         side1_avg_elo =
           Enum.map(side1, & &1.avg_elo)

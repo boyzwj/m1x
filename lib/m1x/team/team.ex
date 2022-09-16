@@ -133,7 +133,7 @@ defmodule Team do
       throw("队伍正在匹配中")
     end
 
-    Team.Matcher.Svr.ready_match(mode, [team_id, role_id, reply])
+    Matcher.Svr.ready_match(mode, [team_id, role_id, reply])
     {:ok, state}
   end
 
@@ -151,7 +151,7 @@ defmodule Team do
   end
 
   def member_online(~M{%Team mode,team_id} = state, [role_id]) do
-    Team.Matcher.Svr.member_online(mode, [team_id, role_id])
+    Matcher.Svr.member_online(mode, [team_id, role_id])
     state |> ok()
   end
 
@@ -317,7 +317,7 @@ defmodule Team do
   defp do_cancel_match(~M{%Team status: @status_matched}, _role_id), do: {:error, "队伍匹配完成，无法取消匹配"}
 
   defp do_cancel_match(~M{%Team team_id,mode,status} = state, role_id) do
-    with :ok <- Team.Matcher.Svr.cancel_match(mode, [team_id]) do
+    with :ok <- Matcher.Svr.cancel_match(mode, [team_id]) do
       if status == @status_matching do
         # TODO 广播消息： [玩家名]退出了PARTY，匹配中断
         Logger.debug(cancel_match: "广播消息： #{role_id} 退出了team: #{team_id}，匹配中断")

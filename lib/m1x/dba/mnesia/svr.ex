@@ -51,8 +51,20 @@ defmodule Dba.Mnesia.Svr do
   @impl true
 
   def handle_info(:register, state) do
-    db_list = []
-    Dba.Mnesia.Manager.initialize(db_list)
+    with [_ | _] = db_list <- Dba.Manager.call(:get_mnesia_nodes) do
+      Dba.Mnesia.Manager.copy_database(db_list)
+      Dba.Manager.call({:regist_mnesia, node()})
+    else
+      _ ->
+        if Node.Misc.block_id() == 1 do
+          Dba.Mnesia.Manager.create_database([])
+          Dba.Manager.call({:regist_mnesia, node()})
+        else
+          Logger.info("remote node not ready.. retry after 1 sec ..", ansi_color: :green)
+          Process.send_after(self(), :register, 1000)
+        end
+    end
+
     {:noreply, state}
   end
 
