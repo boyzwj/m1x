@@ -203,8 +203,8 @@ defmodule Role.Svr do
           Role.Misc.sd_err(0, inspect(x))
       end
     else
-      _ ->
-        Logger.warning("client msg decode error")
+      err ->
+        Logger.warning("client msg decode error, #{inspect(err)}")
     end
 
     last_msg_time = Util.unixtime()

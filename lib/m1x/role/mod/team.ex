@@ -153,7 +153,7 @@ defmodule Role.Mod.Team do
       throw("你当前队伍匹配成功，无法退出队伍")
     end
 
-    with :ok <- Team.Svr.exit_team(team_id, [role_id]) do
+    with :ok <- Team.Svr.exit_team(team_id, [role_id, status]) do
       set_role_status(@role_status_idle)
       {:ok, ~M{state| team_id: 0}}
     else
@@ -240,7 +240,7 @@ defmodule Role.Mod.Team do
       throw("被邀请者已离线")
     end
 
-    {:ok, ~M{%Team mode}} = Team.Svr.get_team_info(team_id, role_id)
+    {:ok, ~M{%Team mode}} = Team.Svr.get_team_info(team_id, invitor_id)
     ~M{%Pbm.Team.InviteRequest2C invitor_id,mode,team_id} |> Role.Misc.send_to(role_id)
     ~M{%Pbm.Team.Invite2C role_id} |> sd()
     :ok

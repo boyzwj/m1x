@@ -54,8 +54,24 @@ defmodule Team do
     end
   end
 
-  # defp do_exit_team(~M{%Team status: @status_matched}, _), do: {:error, "队伍匹配成功，无法退出队伍"}
-  # defp do_exit_team(~M{%Team status: @status_battle}, _), do: {:error, "队伍还在另一场战斗中,无法退出队伍"}
+  def exit_team(~M{%Team } = state, [role_id, @role_status_idle]) do
+    with {:ok, state} <- do_exit_team(state, [role_id]) do
+      Logger.debug("role[#{role_id}] exit team[#{state.team_id}] success")
+
+      state |> sync() |> ok()
+    else
+      {:error, msg} ->
+        throw(msg)
+    end
+  end
+
+  def exit_team(~M{%Team status: @status_battle}, _) do
+    throw("队伍还在另一场战斗中,无法退出队伍")
+  end
+
+  def exit_team(~M{%Team status: @status_matched}, _) do
+    throw("队伍匹配成功，无法退出队伍")
+  end
 
   defp do_exit_team(~M{%Team members,member_num,leader_id,team_id} = state, [role_id]) do
     if not :ordsets.is_element(role_id, role_ids()) do

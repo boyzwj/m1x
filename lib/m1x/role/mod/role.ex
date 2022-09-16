@@ -52,7 +52,6 @@ defmodule Role.Mod.Role do
   use Memoize
 
   defp on_init(~M{%M status} = state) do
-    Logger.debug(mod: __MODULE__, fun: :on_init)
     set_role_status(status)
     state
   end

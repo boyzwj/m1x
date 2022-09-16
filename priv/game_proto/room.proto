@@ -13,7 +13,7 @@ message Info2S{
 message Room{
     uint32 room_id = 1;  //房间ID
     uint64 owner_id = 2; //房主ID
-    uint32 status = 3;    //房间状态
+    uint32 status = 3;    //房间状态 0:空闲|1：战斗中
     uint32 map_id = 4;   //地图ID
     map<uint32,uint64> members = 5;  //队伍成员
     uint32 member_num = 6; //成员数量

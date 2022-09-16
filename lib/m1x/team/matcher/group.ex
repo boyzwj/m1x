@@ -307,7 +307,7 @@ defmodule Team.Matcher.Group do
     role_id = List.first(all_role_ids)
 
     with {:ok, room_id} <-
-           Lobby.Svr.create_room([@room_type_match, all_role_ids, map_id, token, ext]),
+           Lobby.Svr.create_room([@room_type_match, all_role_ids, map_id, token, ~M{ext}]),
          :ok <- Lobby.Room.Svr.start_game(room_id, role_id) do
       {:ok, team_ids}
     else

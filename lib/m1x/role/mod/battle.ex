@@ -3,6 +3,8 @@ defmodule Role.Mod.Battle do
   use Role.Mod
 
   @expired 30 * 60 * 60
+  @room_type_free 1
+  @room_type_match 2
 
   defp on_init(~M{%M battle_id,last_battle_time} = state) do
     with ~M{battle_start_time} <- Dc.get_battle_info(battle_id),
@@ -16,7 +18,6 @@ defmodule Role.Mod.Battle do
         ~M{state|battle_id: 0,last_battle_time: 0}
 
       _ ->
-        Logger.debug("battle not exist.battle_id: #{battle_id}")
         ~M{state|battle_id: 0,last_battle_time: 0}
     end
   end
@@ -42,6 +43,7 @@ defmodule Role.Mod.Battle do
            (last_battle_time >= battle_start_time and
               last_battle_time < battle_start_time + @expired) || {:error, :battle_expired} do
       set_role_status(@role_status_idle)
+      %Pbm.Battle.ExitBattle2C{} |> sd()
       ~M{state|battle_id: 0,last_battle_time: 0} |> set_data()
     else
       {:error, reason} ->
@@ -62,7 +64,13 @@ defmodule Role.Mod.Battle do
     end
   end
 
-  def role_status_change(~M{%M}, @role_status_matched, {:battle_start, _} = msg) do
+  def role_status_change(~M{%M}, @role_status_idle, {:battle_start, @room_type_free} = msg) do
+    Logger.debug(mod: __MODULE__, fun: :role_status_change, msg: inspect(msg))
+    set_role_status(@role_status_battle)
+    :ok
+  end
+
+  def role_status_change(~M{%M}, @role_status_matched, {:battle_start, @room_type_match} = msg) do
     Logger.debug(mod: __MODULE__, fun: :role_status_change, msg: inspect(msg))
     set_role_status(@role_status_battle)
     :ok
@@ -75,7 +83,7 @@ defmodule Role.Mod.Battle do
     :ok
   end
 
-  def role_status_change(~M{%M}, @role_status_battle, {:battle_closed, _, :_} = msg) do
+  def role_status_change(~M{%M}, @role_status_battle, {:battle_closed, _, _} = msg) do
     Logger.debug(mod: __MODULE__, fun: :role_status_change, msg: inspect(msg))
     set_role_status(@role_status_idle)
     :ok

@@ -6,7 +6,7 @@ defmodule Role.Mod.Room do
   @status_battle 1
   def role_status_change(
         ~M{%M} = state,
-        @role_status_battle,
+        _,
         {:battle_closed, @room_type_free, :battle_finish} = msg
       ) do
     Logger.debug(mod: __MODULE__, fun: :role_status_change, msg: inspect(msg))
@@ -16,7 +16,7 @@ defmodule Role.Mod.Room do
 
   def role_status_change(
         ~M{%M} = state,
-        @role_status_battle,
+        _,
         {:battle_closed, @room_type_free, _} = msg
       ) do
     Logger.debug(mod: __MODULE__, fun: :role_status_change, msg: inspect(msg))
@@ -44,8 +44,8 @@ defmodule Role.Mod.Room do
   end
 
   def h(~M{%M room_id, map_id}, %Pbm.Room.Info2S{}) do
-    with ~M{%Lobby.Room members,owner_id} <- Lobby.Svr.get_room_info(room_id) do
-      room = ~M{%Pbm.Room.Room  room_id,owner_id,map_id,members}
+    with ~M{%Lobby.Room members,owner_id,room_name} <- Lobby.Svr.get_room_info(room_id) do
+      room = ~M{%Pbm.Room.Room  room_id,owner_id,map_id,members,room_name}
       ~M{%Pbm.Room.Info2C room} |> sd()
     else
       _ ->
@@ -65,12 +65,18 @@ defmodule Role.Mod.Room do
     :ok
   end
 
-  def h(~M{%M room_id,role_id} = state, ~M{%Pbm.Room.Create2S map_id, password}) do
+  def h(
+        ~M{%M room_id,role_id} = state,
+        ~M{%Pbm.Room.Create2S map_id, password,room_name,lv_limit,round_total,round_time,enable_invite}
+      ) do
     if room_id != 0 do
       throw("已经在房间里了!")
     end
 
-    with {:ok, room_id} <- Lobby.Svr.create_room([@room_type_free, [role_id], map_id, password]) do
+    args = ~M{room_name,lv_limit,round_total,round_time,enable_invite}
+
+    with {:ok, room_id} <-
+           Lobby.Svr.create_room([@room_type_free, [role_id], map_id, password, args]) do
       ~M{%Pbm.Room.Create2C room_id} |> sd()
       {:ok, ~M{state | room_id}}
     else
@@ -147,11 +153,13 @@ defmodule Role.Mod.Room do
   end
 
   # 开始游戏
-
   def h(~M{%M room_id}, ~M{%Pbm.Room.StartGame2S }) do
     with :ok <- Lobby.Room.Svr.start_game(room_id, role_id()) do
       :ok
     else
+      {:error, error} ->
+        throw(error)
+
       _ ->
         :ok
     end
