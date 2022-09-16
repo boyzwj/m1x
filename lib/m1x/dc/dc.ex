@@ -16,7 +16,11 @@ defmodule Dc do
     # TODO 后面取dsa_id的方式需要替换
     with ~m{dsa_id} <- get_battle_info(battle_id),
          {from, _, _} <- dsa_infos[dsa_id] do
-      Dc.Client.send2dsa(from, msg)
+      msg
+      |> PB.encode!()
+      |> IO.iodata_to_binary()
+      |> then(&%Dc.DsMsg2C{battle_id: battle_id, data: &1})
+      |> then(&Dc.Client.send2dsa(from, &1))
     end
 
     {:ok, state}
@@ -57,7 +61,13 @@ defmodule Dc do
   end
 
   def get_battle_info(battle_id) do
-    Redis.get("#{__MODULE__}:#{battle_id}")
+    case Redis.get("#{__MODULE__}:#{battle_id}") do
+      nil ->
+        {:error, :battle_not_exist}
+
+      data ->
+        Poison.decode!(data)
+    end
   end
 
   def set_battle_info(battle_id, ~M{dsa_id,battle_start_time,room_id}) do
@@ -85,7 +95,6 @@ defmodule Dc do
   end
 
   def h(~M{%Dc room_list} = state, _from, ~M{%Dc.BattleEnd2S room_id} = msg) do
-    # TODO 需通知room中的所有队伍或玩家回到idle状态
     room_list = Map.delete(room_list, room_id)
     Lobby.Room.Svr.cast(room_id, {:ds_msg, msg})
     ~M{state | room_list}
@@ -99,10 +108,14 @@ defmodule Dc do
   end
 
   def h(~M{%Dc room_list} = state, _from, ~M{%Dc.StartBattleFail2S room_id} = msg) do
-    # TODO 需通知room中的所有队伍或玩家回到idle状态
     room_list = Map.delete(room_list, room_id)
     Lobby.Room.Svr.cast(room_id, {:ds_msg, msg})
     ~M{state | room_list}
+  end
+
+  def h(~M{%Dc } = state, _from, ~M{%Dc.BattleStarted2S room_id} = msg) do
+    Lobby.Room.Svr.cast(room_id, {:ds_msg, msg})
+    state
   end
 
   def dsa_offline(~M{%Dc dsa_infos,sorted_dsa} = state, id) do

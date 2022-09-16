@@ -79,8 +79,8 @@ defmodule Team.Svr do
     :global.whereis_name(name(team_id))
   end
 
-  def cast(room_id, msg) when is_integer(room_id) do
-    with pid when is_pid(pid) <- name(room_id) |> :global.whereis_name() do
+  def cast(team_id, msg) when is_integer(team_id) do
+    with pid when is_pid(pid) <- name(team_id) |> :global.whereis_name() do
       cast(pid, msg)
     else
       _ ->
@@ -92,12 +92,12 @@ defmodule Team.Svr do
     pid |> GenServer.cast(msg)
   end
 
-  def call(room_id, msg) when is_integer(room_id) do
-    with pid when is_pid(pid) <- name(room_id) |> :global.whereis_name() do
+  def call(team_id, msg) when is_integer(team_id) do
+    with pid when is_pid(pid) <- name(team_id) |> :global.whereis_name() do
       call(pid, msg)
     else
       _ ->
-        {:error, :room_not_exist}
+        {:error, :team_not_exist}
     end
   end
 

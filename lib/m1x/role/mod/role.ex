@@ -3,16 +3,17 @@ defmodule Role.Mod.Role do
   import Ecto.Changeset
 
   schema "role" do
-    field :role_id, :integer, default: nil
-    field :account, :string, default: ""
-    field :role_name, :string, default: ""
-    field :level, :integer, default: 1
-    field :gender, :integer, default: 1
-    field :head_id, :integer, default: 1
-    field :avatar_id, :integer, default: 1
-    field :rank, :integer, default: 0
-    field :create_time, :integer, default: 0
-    field :elo, :integer, default: 1000
+    field(:role_id, :integer, default: nil)
+    field(:account, :string, default: "")
+    field(:role_name, :string, default: "")
+    field(:level, :integer, default: 1)
+    field(:gender, :integer, default: 1)
+    field(:head_id, :integer, default: 1)
+    field(:avatar_id, :integer, default: 1)
+    field(:rank, :integer, default: 0)
+    field(:create_time, :integer, default: 0)
+    field(:elo, :integer, default: 1000)
+    field(:status, :integer, default: 0)
   end
 
   def changeset(params), do: %__MODULE__{} |> changeset(params)
@@ -29,7 +30,8 @@ defmodule Role.Mod.Role do
       :avatar_id,
       :rank,
       :create_time,
-      :elo
+      :elo,
+      :status
     ])
     |> validate_required([
       :role_id,
@@ -41,12 +43,32 @@ defmodule Role.Mod.Role do
       :avatar_id,
       :rank,
       :create_time,
-      :elo
+      :elo,
+      :status
     ])
   end
 
   use Role.Mod
   use Memoize
+
+  defp on_init(~M{%M status} = state) do
+    Logger.debug(mod: __MODULE__, fun: :on_init)
+    set_role_status(status)
+    state
+  end
+
+  def on_before_save(~M{%M status: last_status} = state) do
+    status = get_role_status()
+
+    # Logger.debug(mod: __MODULE__, fun: :on_before_save, status: status, last_status: last_status)
+
+    if last_status != status do
+      set_dirty(true)
+      ~M{state|status}
+    else
+      state
+    end
+  end
 
   def h(state, ~M{%Pbm.Role.Info2S }) do
     with ~M{%M } = data <- state do

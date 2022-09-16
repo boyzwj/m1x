@@ -173,12 +173,7 @@ defmodule Team.Matcher do
     |> Enum.reduce(state, fn token, state_acc ->
       case Group.get(token) |> Group.loop() do
         {:battle_started, tids} ->
-          Enum.each(tids, fn team_id ->
-            #  TODO 后面将战斗中状态先同步至role进程，然后role进程在同步至team进程
-            Team.Svr.begin_battle(team_id, [])
-            MTeam.delete(team_id)
-          end)
-
+          Enum.each(tids, &MTeam.delete(&1))
           Group.rm_from_waiting_list(token)
           team_ids = Enum.reduce(tids, team_ids, fn x, acc -> MapSet.delete(acc, x) end)
           ~M{state_acc|team_ids}

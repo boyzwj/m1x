@@ -79,6 +79,10 @@ defmodule Role.Svr do
     cast(role_id, :offline)
   end
 
+  def role_status_change(role_id, event) do
+    cast(role_id, {:role_status_change, event})
+  end
+
   def get_data(role_id, mod) do
     call(role_id, {:apply, mod, :get_data, []})
   end
@@ -229,6 +233,28 @@ defmodule Role.Svr do
 
   def handle_cast({:kicked_from_room, f_role_id}, state) do
     Role.Mod.Room.kicked_from_room(f_role_id)
+    {:noreply, state}
+  end
+
+  def handle_cast({:role_status_change, event}, state) do
+    for mod <- PB.modules() do
+      try do
+        if function_exported?(mod, :role_status_change, 3) do
+          old_status = Role.Misc.get_role_status()
+          apply(mod, :role_status_change, [mod.get_data(), old_status, event])
+        end
+
+        true
+      catch
+        kind, reason ->
+          Logger.error(
+            "#{mod} [role_status_change] event: [#{inspect(event)}], error !! #{inspect({kind, reason})} , #{inspect(__STACKTRACE__)} "
+          )
+
+          false
+      end
+    end
+
     {:noreply, state}
   end
 

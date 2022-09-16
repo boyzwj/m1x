@@ -73,4 +73,15 @@ defmodule Role.Misc do
     msg = %Pbm.System.Error2C{error_code: error_code, error_msg: error_msg}
     send_to(msg, role_id)
   end
+
+  @doc """
+  角色状态
+  """
+  def get_role_status() do
+    Process.get({__MODULE__, :role_status})
+  end
+
+  def set_role_status(status) do
+    Process.put({__MODULE__, :role_status}, status)
+  end
 end

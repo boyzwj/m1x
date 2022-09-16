@@ -1,11 +1,48 @@
 defmodule Role.Mod.Room do
-  defstruct role_id: nil, room_id: 0, map_id: 0, status: 0
+  defstruct role_id: nil, room_id: 0, map_id: 0
   use Role.Mod
   @room_type_free 1
-  # @room_type_match 2
-  @doc """
-  协议处理
-  """
+
+  @status_battle 1
+  def role_status_change(
+        ~M{%M} = state,
+        @role_status_battle,
+        {:battle_closed, @room_type_free, :battle_finish} = msg
+      ) do
+    Logger.debug(mod: __MODULE__, fun: :role_status_change, msg: inspect(msg))
+    h(state, %Pbm.Room.Info2S{})
+    :ok
+  end
+
+  def role_status_change(
+        ~M{%M} = state,
+        @role_status_battle,
+        {:battle_closed, @room_type_free, _} = msg
+      ) do
+    Logger.debug(mod: __MODULE__, fun: :role_status_change, msg: inspect(msg))
+    h(state, %Pbm.Room.Info2S{})
+    :ok
+  end
+
+  def role_status_change(_, _, _) do
+    :ok
+  end
+
+  defp on_init(~M{%M room_id: 0} = state), do: state
+
+  defp on_init(~M{%M room_id,role_id} = state) do
+    with ~M{%Lobby.Room members,status} <- Lobby.Svr.get_room_info(room_id),
+         true <- Enum.member?(Map.values(members), role_id),
+         true <- status == @status_battle do
+      set_role_status(@role_status_battle)
+      state
+    else
+      _ ->
+        set_role_status(@role_status_idle)
+        ~M{state|room_id: 0}
+    end
+  end
+
   def h(~M{%M room_id, map_id}, %Pbm.Room.Info2S{}) do
     with ~M{%Lobby.Room members,owner_id} <- Lobby.Svr.get_room_info(room_id) do
       room = ~M{%Pbm.Room.Room  room_id,owner_id,map_id,members}

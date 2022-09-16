@@ -23,6 +23,8 @@ defmodule PB do
     end
     |> Enum.filter(&(!("#{&1}" |> String.ends_with?("Dsa"))))
     |> Enum.to_list()
+    |> Enum.filter(&(&1 != Role.Mod.Role))
+    |> List.insert_at(0, Role.Mod.Role)
 
   def modules() do
     unquote(pkgs)

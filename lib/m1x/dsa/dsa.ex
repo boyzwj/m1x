@@ -99,7 +99,7 @@ defmodule Dsa do
 
   def dc_msg(~M{%Dsa workers} = state, ~M{%Dc.DsMsg2C battle_id,data}) do
     with ~M{worker_pid} <- workers |> Map.get(battle_id) do
-      GenServer.cast(worker_pid, {:ds_msg, PB.decode!(data)})
+      GenServer.cast(worker_pid, {:dc2ds, PB.decode!(data)})
       state
     else
       _ ->

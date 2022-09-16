@@ -9,7 +9,7 @@ defmodule Dc.Manager do
 
   def send_to_ds(battle_id, msg) do
     {func, _} = __ENV__.function
-    call({func, [battle_id | msg]})
+    call({func, [battle_id, msg]})
   end
 
   @loop_interval 1000

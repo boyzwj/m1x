@@ -23,6 +23,9 @@ defmodule Lobby.Room do
   @room_type_free 1
   @room_type_match 2
 
+  @status_idle 0
+  @status_battle 1
+
   def init([room_id, room_type = @room_type_free, role_ids, map_id, password]) do
     init([room_id, room_type, role_ids, map_id, password, nil])
   end
@@ -162,10 +165,20 @@ defmodule Lobby.Room do
   @doc """
   开始游戏回调
   """
-  def start_game(~M{%M room_id, owner_id, map_id, members} = state, role_id) do
+  def start_game(~M{%M room_id,owner_id, map_id,members,room_type,ext,status} = state, role_id) do
     if role_id != owner_id, do: throw("你不是房主")
+    if status == @status_battle, do: throw("战斗未结束")
+
+    if room_type == @room_type_match do
+      ~M{team_ids} = ext
+      Enum.each(team_ids, &Team.Svr.begin_battle(&1, []))
+    end
+
+    Map.values(members)
+    |> Enum.each(&Role.Svr.role_status_change(&1, {:battle_start, room_type}))
+
     Dc.Manager.start_game([map_id, room_id, members])
-    state |> ok()
+    ~M{state|status: @status_battle} |> ok()
   end
 
   def exit_room(~M{%M members,member_num,owner_id} = state, role_id) do
@@ -197,7 +210,7 @@ defmodule Lobby.Room do
   end
 
   def ds_msg(
-        ~M{%M room_type,ext} = state,
+        ~M{%M room_type,ext,members} = state,
         ~M{%Pbm.Dsa.GameStatis2S battle_id, battle_result} = msg
       ) do
     Logger.debug("room receive ds msg #{inspect(msg)}")
@@ -206,7 +219,6 @@ defmodule Lobby.Room do
     |> broad_cast()
 
     if room_type == @room_type_match do
-      # TODO 后续改到PlayerQuit
       ~M{team_ids} = ext
       Enum.each(team_ids, &Team.Svr.battle_closed(&1, [:battle_finish]))
 
@@ -214,14 +226,16 @@ defmodule Lobby.Room do
       self() |> Process.send(:shutdown, [:nosuspend])
     end
 
-    {:ok, state}
+    Map.values(members)
+    |> Enum.each(&Role.Svr.role_status_change(&1, {:battle_closed, room_type, :battle_finish}))
+
+    ~M{state|status: @status_idle} |> ok()
   end
 
   def ds_msg(~M{%M room_type,ext} = state, ~M{%Dc.BattleEnd2S } = msg) do
     Logger.debug("room receive ds msg #{inspect(msg)}")
 
     if room_type == @room_type_match do
-      # TODO 后续改到PlayerQuite
       ~M{team_ids} = ext
       Enum.each(team_ids, &Team.Svr.battle_closed(&1, [:ds_down]))
 
@@ -229,13 +243,19 @@ defmodule Lobby.Room do
       self() |> Process.send(:shutdown, [:nosuspend])
     end
 
-    {:ok, state}
+    ~M{state|status: @status_idle} |> ok()
   end
 
-  def ds_msg(~M{%M room_type: @room_type_match,ext } = state, ~M{%Dc.StartBattleFail2S }) do
-    ~M{team_ids} = ext
-    Enum.each(team_ids, &Team.Svr.battle_closed(&1, [:start_fail]))
-    {:ok, state}
+  def ds_msg(~M{%M room_type,ext} = state, ~M{%Dc.StartBattleFail2S }) do
+    if room_type == @room_type_match do
+      ~M{team_ids} = ext
+      Enum.each(team_ids, &Team.Svr.battle_closed(&1, [:start_fail]))
+
+      ## 匹配临时房间战斗结束关闭
+      self() |> Process.send(:shutdown, [:nosuspend])
+    end
+
+    ~M{state|status: @status_idle} |> ok()
   end
 
   def ds_msg(~M{%M members } = state, ~M{%Dc.BattleStarted2S } = msg) do
@@ -246,22 +266,10 @@ defmodule Lobby.Room do
     {:ok, state}
   end
 
-  def ds_msg(
-        ~M{%M room_type,ext} = state,
-        ~M{%Pbm.Dsa.PlayerQuit2S battle_id, player_id,reason} = msg
-      ) do
-    # TODO
-    Logger.debug("room receive ds msg #{inspect(msg)}")
-
-    # if room_type == @room_type_match do
-    #   # TODO 后续改到PlayerQuit
-    #   ~M{team_ids} = ext
-    #   Enum.each(team_ids, &Team.Svr.exit_battle(&1, [:battle_finish]))
-
-    #   ## 匹配临时房间战斗结束关闭
-    #   self() |> Process.send(:shutdown, [:nosuspend])
-    # end
-
+  def ds_msg(~M{%M room_type,room_id} = state, ~M{%Pbm.Dsa.PlayerQuit2S player_id} = msg) do
+    Logger.debug("room(#{room_type}-#{room_id}) receive ds msg #{inspect(msg)}")
+    # TODO msg的数据有可能是重复的，所以修改状态前必须保证是同一场战斗
+    Role.Svr.role_status_change(player_id, msg)
     {:ok, state}
   end
 

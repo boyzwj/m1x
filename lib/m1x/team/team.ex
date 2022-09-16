@@ -35,8 +35,10 @@ defmodule Team do
 
   def exit_team(~M{%Team status: @status_matching} = state, [role_id]) do
     with {:ok, state} <- do_cancel_match(state, role_id),
-         {:ok, state} <- do_exit_team(state, [role_id]) do
-      state |> sync() |> ok()
+         {:ok, ~M{%Team } = state} <- do_exit_team(state, [role_id]) do
+      ~M{state| status: @status_idle}
+      |> sync()
+      |> ok()
     else
       {:error, msg} ->
         throw(msg)
@@ -52,8 +54,8 @@ defmodule Team do
     end
   end
 
-  defp do_exit_team(~M{%Team status: @status_matched}, _), do: {:error, "队伍匹配成功，无法退出队伍"}
-  defp do_exit_team(~M{%Team status: @status_battle}, _), do: {:error, "队伍还在另一场战斗中,无法退出队伍"}
+  # defp do_exit_team(~M{%Team status: @status_matched}, _), do: {:error, "队伍匹配成功，无法退出队伍"}
+  # defp do_exit_team(~M{%Team status: @status_battle}, _), do: {:error, "队伍还在另一场战斗中,无法退出队伍"}
 
   defp do_exit_team(~M{%Team members,member_num,leader_id,team_id} = state, [role_id]) do
     if not :ordsets.is_element(role_id, role_ids()) do
@@ -97,9 +99,13 @@ defmodule Team do
     end
 
     avg_elo = get_avg_elo(state)
-    Team.Matcher.Svr.join(mode, [team_id, Map.values(members), avg_elo, false])
-    state = ~M{state| status: @status_matching} |> sync()
-    {{:ok, @status_matching}, state}
+    role_ids = Map.values(members)
+    Team.Matcher.Svr.join(mode, [team_id, role_ids, avg_elo, false])
+
+    ~M{state| status: @status_matching}
+    |> sync_role_status(:begin_match)
+    |> sync()
+    |> ok()
   end
 
   def ready_match(~M{%Team team_id,mode,status} = state, [role_id, reply]) do
@@ -137,7 +143,10 @@ defmodule Team do
     Logger.debug(mod: "match_ok", info: state)
 
     if status == @status_matching do
-      ~M{state|status: @status_matched} |> sync() |> ok()
+      ~M{state|status: @status_matched}
+      |> sync_role_status(:match_ok)
+      |> sync()
+      |> ok()
     else
       {:ok, state}
     end
@@ -176,12 +185,12 @@ defmodule Team do
 
     member_ids = Map.values(members)
 
-    if !Enum.member?(member_ids, invitor_id) do
-      throw("对方已离开该队伍")
-    end
-
     if Enum.member?(member_ids, role_id) do
       throw("已在队伍中")
+    end
+
+    if !Enum.member?(member_ids, invitor_id) do
+      throw("对方已离开该队伍")
     end
 
     add_members(state, role_id) |> sync() |> ok()
@@ -237,9 +246,22 @@ defmodule Team do
     |> set_role_ids()
   end
 
+  # defp sync(~M{%Team team_id, leader_id,mode,members,status} = state) do
+  #   info = ~M{%Pbm.Team.BaseInfo  team_id,leader_id,mode,members,status}
+  #   Role.Svr.execute_mod_fun(role_ids(), &Role.Mod.Team.on_sync/2, info)
+  #   state
+  # end
+
   defp sync(~M{%Team team_id, leader_id,mode,members,status} = state) do
     info = ~M{%Pbm.Team.BaseInfo  team_id,leader_id,mode,members,status}
-    Role.Svr.execute_mod_fun(role_ids(), &Role.Mod.Team.on_sync/2, info)
+    ~M{%Pbm.Team.Info2C info} |> broad_cast()
+    state
+  end
+
+  defp sync_role_status(~M{%Team members} = state, event) do
+    Map.values(members)
+    |> Enum.each(&Role.Svr.role_status_change(&1, event))
+
     state
   end
 

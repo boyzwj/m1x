@@ -20,6 +20,7 @@ defmodule M1x.Application do
         # {M1x.Worker, arg}
       ] ++ NodeConfig.services()
 
+    PB.modules() |> Enum.each(&Code.ensure_loaded/1)
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: M1x.Supervisor]

@@ -108,7 +108,21 @@ defmodule Dsa.Worker do
     {:noreply, state}
   end
 
-  def handle_cast({:ds_msg, msg}, state) do
+  # TODO delete when test finish
+  def handle_cast(
+        {:dc2ds, ~M{%Pbm.Dsa.QuitGame2C battle_id, player_id, reason}},
+        ~M{%M room_id} = state
+      ) do
+    ~M{%Pbm.Dsa.PlayerQuit2S battle_id, player_id, reason}
+    |> PB.encode!()
+    |> IO.iodata_to_binary()
+    |> (&%Dc.RoomMsg2S{room_id: room_id, data: &1}).()
+    |> Dsa.Svr.send2dc()
+
+    {:noreply, state}
+  end
+
+  def handle_cast({:dc2ds, msg}, state) do
     send2ds(state, msg)
     {:noreply, state}
   end
@@ -144,9 +158,6 @@ defmodule Dsa.Worker do
       Logger.debug("the battle os pid is #{pid},battle_id: #{battle_id}")
 
       ~M{%Dc.BattleStarted2S room_id,battle_id}
-      |> PB.encode!()
-      |> IO.iodata_to_binary()
-      |> (&%Dc.RoomMsg2S{room_id: room_id, data: &1}).()
       |> Dsa.Svr.send2dc()
 
       ~M{%M state| os_pid: pid}
@@ -187,8 +198,13 @@ defmodule Dsa.Worker do
   end
 
   # TODO 需要处理战斗结束退出和战斗过程中退出
-  def handle(~M{%M } = state, ~M{%Pbm.Dsa.PlayerQuit2S battle_id, player_id,reason} = msg) do
-    # Logger.warn("receive #{inspect(msg)}")
+  def handle(~M{%M room_id} = state, ~M{%Pbm.Dsa.PlayerQuit2S } = msg) do
+    msg
+    |> PB.encode!()
+    |> IO.iodata_to_binary()
+    |> (&%Dc.RoomMsg2S{room_id: room_id, data: &1}).()
+    |> Dsa.Svr.send2dc()
+
     state
   end
 
