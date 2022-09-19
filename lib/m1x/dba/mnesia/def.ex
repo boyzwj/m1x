@@ -37,13 +37,12 @@ defmodule Dba.Mnesia.Def do
 
   def role_tables() do
     for mod <- PB.modules() do
-      {mod, [:id, :data, :last_changed], :leveldb_copies}
+      {mod, [:id, :data, :last_changed], :disc_copies}
     end
   end
 
   def tables() do
-    # (stores() |> Enum.map(&{&1, :rocksdb_copies})) ++
-    (stores() |> Enum.map(&{&1, :leveldb_copies})) ++
+    (stores() |> Enum.map(&{&1, :disc_copies})) ++
       (services() |> Enum.map(&{&1, :ram_copies}))
   end
 end

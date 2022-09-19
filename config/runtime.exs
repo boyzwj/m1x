@@ -45,7 +45,7 @@ if config_env() == :prod do
   # host = System.get_env("PHX_HOST") || "example.com"
   # port = String.to_integer(System.get_env("PORT") || "4000")
   config :mnesia,
-    dir: '.mnesia/#{Mix.env}/#{node()}'
+    dir: System.get_env("DB_PATH") || '.mnesia/#{node()}'
 
   config :m1x, M1xWeb.Endpoint,
     # url: [host: host, port: 443, scheme: "https"],
@@ -79,8 +79,8 @@ if config_env() == :prod do
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
 
-
-  config :logger, backends: [:console, {LoggerFileBackend, :info}, {LoggerFileBackend, :error_log}]
+  config :logger,
+    backends: [:console, {LoggerFileBackend, :info}, {LoggerFileBackend, :error_log}]
 
   config :logger, :info,
     format: "### [$date $time] $metadata[$level] \n  * $levelpad$message\n\n",
@@ -98,6 +98,4 @@ if config_env() == :prod do
     format: "### [$date $time] $metadata[$level] \n  * $levelpad$message\n\n",
     metadata: [:module, :function, :line],
     level: :debug
-
-
 end
