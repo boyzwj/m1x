@@ -38,17 +38,17 @@ defmodule NodeConfig do
       },
       {Horde.DynamicSupervisor,
        [name: Matrix.RankSupervisor, strategy: :one_for_one, members: :auto]},
-      {Rank.Sup, []},
-      {Bot.Sup, []},
       {Horde.DynamicSupervisor,
        [name: Matrix.MailSupervisor, strategy: :one_for_one, members: :auto]},
+      {Global.Sup, []},
+      {Dba.Mnesia.Sup, []},
+      {Rank.Sup, []},
+      {Bot.Sup, []},
       {Mail.Manager, []},
       {Role.Sup, []},
       {Lobby.Sup, []},
       {Dc.Sup, []},
-      {Team.Sup, []},
-      {Global.Sup, []},
-      {Dba.Mnesia.Sup, []}
+      {Team.Sup, []}
     ]
   end
 
@@ -90,8 +90,6 @@ defmodule NodeConfig do
       {Mail.Manager, []},
       {Role.Sup, []},
       {Lobby.Sup, []},
-      # {Dsa.Sup, []},
-      # {Api.Sup, []},
       {GateWay.ListenerSup, []},
       {Dc.Sup, []},
       {Bot.Sup, []},

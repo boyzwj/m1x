@@ -9,7 +9,7 @@ defmodule Dba.Mnesia.Manager do
     Memento.start()
     :mnesia_monitor.set_env(:dump_log_write_threshold, 50000)
     :mnesia_monitor.set_env(:dc_dump_limit, 40)
-    :mnesia_eleveldb.register()
+    # :mnesia_eleveldb.register()
     create_tables()
   end
 
@@ -59,7 +59,7 @@ defmodule Dba.Mnesia.Manager do
     Memento.start()
     :mnesia_monitor.set_env(:dump_log_write_threshold, 50000)
     :mnesia_monitor.set_env(:dc_dump_limit, 40)
-    :mnesia_eleveldb.register()
+    # :mnesia_eleveldb.register()
     {:ok, _} = Memento.add_nodes(store_list)
     Table.set_storage_type(:schema, node(), :disc_copies)
     copy_tables()
