@@ -14,11 +14,12 @@ message Room{
     uint32 room_id = 1;  //房间ID
     uint64 owner_id = 2; //房主ID
     uint32 status = 3;    //房间状态 0:空闲|1：战斗中
-    uint32 map_id = 4;   //地图ID
+    uint32 map_id = 4;   //模式地图ID
     map<uint32,uint64> members = 5;  //队伍成员
     uint32 member_num = 6; //成员数量
     uint32 create_time = 7; //创建时间
     string password = 8;   //MD5密码
+    string room_name = 9;   //房间名
 }
 
 //返回信息
@@ -55,8 +56,13 @@ message List2C{
 
 //创建房间
 message Create2S{
-    uint32 map_id = 1;   //地图ID
+    uint32 map_id = 1;   //模式地图ID
     string password = 2;  //密码
+    string room_name = 3;  //房间名称
+    bool enable_invite = 4;  //允许成员可邀请其他人
+    uint32 lv_limit = 5;  //等级限制
+    uint32 round_total = 6;  //回合总数
+    uint32 round_time = 7;  //每回合时间
 }
 
 
@@ -75,7 +81,7 @@ message SetRoomMap2S{
 ////设置房间模式返回
 message SetRoomMap2C{
     uint64 role_id = 1;
-    uint32 map_id = 2;
+    uint32 map_id = 2; //模式地图ID
 }
 
 
@@ -160,3 +166,33 @@ message StartGame2C{
     string host = 3;
     uint32 port =4;
 }
+
+message Invite2S{
+    uint64 role_id = 1; //邀请玩家ID
+}
+
+message Invite2C{
+    uint64 role_id = 1; //邀请发送成功
+}
+
+message InviteRequest2C{
+    uint64 invitor_id = 1; //邀请人ID
+    uint32 mode = 2;    //游戏模式
+    uint64 team_id = 3; //队伍ID
+}
+
+message InviteReply2S{
+    uint32 reply = 1; //邀请回复（0拒绝 | 1同意）
+    uint64 invitor_id = 2; //邀请人ID
+    uint64 team_id = 3; //队伍ID
+}
+
+message InviteReply2C{
+    uint64 role_id = 1; //对方ID
+    uint32 reply = 2; //邀请回复（0拒绝 | 1同意）
+}
+
+
+//添加机器人
+message AddBot2S{}
+
