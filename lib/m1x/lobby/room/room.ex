@@ -45,7 +45,7 @@ defmodule Lobby.Room do
 
     password =
       if String.trim(password) != "" do
-        Util.md5("#{room_id}@#{password}") |> Base.encode64() |> String.downcase()
+        Util.md5("#{map_id}@#{password}") |> Base.encode16(case: :lower)
       else
         ""
       end
@@ -164,9 +164,9 @@ defmodule Lobby.Room do
     end
   end
 
-  def join(~M{%M room_id,password,member_num} = state, [role_id, tpassword]) do
+  def join(~M{%M room_id,password,member_num,map_id} = state, [role_id, tpassword]) do
     tpassword = String.trim(tpassword)
-    tpassword = Util.md5("#{room_id}@#{tpassword}") |> Base.encode64() |> String.downcase()
+    tpassword = Util.md5("#{map_id}@#{tpassword}") |> Base.encode16(case: :lower)
     if password != "" && password != tpassword, do: throw("房间密码不正确")
     if member_num >= length(@positions), do: throw("房间已满")
     state = do_join(state, [role_id])
