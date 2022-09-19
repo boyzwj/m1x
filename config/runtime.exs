@@ -43,9 +43,10 @@ if config_env() == :prod do
   #     """
 
   # host = System.get_env("PHX_HOST") || "example.com"
-  # port = String.to_integer(System.get_env("PORT") || "4000")
+  db_path = System.get_env("DB_PATH") || ".mnesia/#{node()}"
+
   config :mnesia,
-    dir: System.get_env("DB_PATH") || '.mnesia/#{node()}'
+    dir: '#{db_path}'
 
   config :m1x, M1xWeb.Endpoint,
     # url: [host: host, port: 443, scheme: "https"],
