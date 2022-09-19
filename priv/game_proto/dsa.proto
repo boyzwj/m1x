@@ -135,3 +135,10 @@ message GameStatis2S
     uint64 battle_id = 1;
     BattleResult battle_result = 2;
 }
+
+message QuitGame2C
+{
+    uint64 battle_id = 1;
+    uint64 player_id = 2;
+    uint32 reason = 3;
+}

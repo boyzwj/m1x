@@ -1,14 +1,51 @@
 defmodule Role.Mod.Room do
-  defstruct role_id: nil, room_id: 0, map_id: 0, status: 0
+  defstruct role_id: nil, room_id: 0, map_id: 0
   use Role.Mod
   @room_type_free 1
-  # @room_type_match 2
-  @doc """
-  协议处理
-  """
+
+  @status_battle 1
+  def role_status_change(
+        ~M{%M} = state,
+        _,
+        {:battle_closed, @room_type_free, :battle_finish} = msg
+      ) do
+    Logger.debug(mod: __MODULE__, fun: :role_status_change, msg: inspect(msg))
+    h(state, %Pbm.Room.Info2S{})
+    :ok
+  end
+
+  def role_status_change(
+        ~M{%M} = state,
+        _,
+        {:battle_closed, @room_type_free, _} = msg
+      ) do
+    Logger.debug(mod: __MODULE__, fun: :role_status_change, msg: inspect(msg))
+    h(state, %Pbm.Room.Info2S{})
+    :ok
+  end
+
+  def role_status_change(_, _, _) do
+    :ok
+  end
+
+  defp on_init(~M{%M room_id: 0} = state), do: state
+
+  defp on_init(~M{%M room_id,role_id} = state) do
+    with ~M{%Lobby.Room members,status} <- Lobby.Svr.get_room_info(room_id),
+         true <- Enum.member?(Map.values(members), role_id),
+         true <- status == @status_battle do
+      set_role_status(@role_status_battle)
+      state
+    else
+      _ ->
+        set_role_status(@role_status_idle)
+        ~M{state|room_id: 0}
+    end
+  end
+
   def h(~M{%M room_id, map_id}, %Pbm.Room.Info2S{}) do
-    with ~M{%Lobby.Room members,owner_id} <- Lobby.Svr.get_room_info(room_id) do
-      room = ~M{%Pbm.Room.Room  room_id,owner_id,map_id,members}
+    with ~M{%Lobby.Room members,owner_id,room_name} <- Lobby.Svr.get_room_info(room_id) do
+      room = ~M{%Pbm.Room.Room  room_id,owner_id,map_id,members,room_name}
       ~M{%Pbm.Room.Info2C room} |> sd()
     else
       _ ->
@@ -28,12 +65,18 @@ defmodule Role.Mod.Room do
     :ok
   end
 
-  def h(~M{%M room_id,role_id} = state, ~M{%Pbm.Room.Create2S map_id, password}) do
+  def h(
+        ~M{%M room_id,role_id} = state,
+        ~M{%Pbm.Room.Create2S map_id, password,room_name,lv_limit,round_total,round_time,enable_invite}
+      ) do
     if room_id != 0 do
       throw("已经在房间里了!")
     end
 
-    with {:ok, room_id} <- Lobby.Svr.create_room([@room_type_free, [role_id], map_id, password]) do
+    args = ~M{room_name,lv_limit,round_total,round_time,enable_invite}
+
+    with {:ok, room_id} <-
+           Lobby.Svr.create_room([@room_type_free, [role_id], map_id, password, args]) do
       ~M{%Pbm.Room.Create2C room_id} |> sd()
       {:ok, ~M{state | room_id}}
     else
@@ -110,11 +153,13 @@ defmodule Role.Mod.Room do
   end
 
   # 开始游戏
-
   def h(~M{%M room_id}, ~M{%Pbm.Room.StartGame2S }) do
     with :ok <- Lobby.Room.Svr.start_game(room_id, role_id()) do
       :ok
     else
+      {:error, error} ->
+        throw(error)
+
       _ ->
         :ok
     end

@@ -38,7 +38,7 @@ defmodule Role.Svr do
 
   # 判断玩家在线
   def alive?(role_id) do
-    :global.whereis_name(name(role_id))
+    pid(role_id)
     |> is_pid()
   end
 
@@ -49,15 +49,15 @@ defmodule Role.Svr do
   end
 
   # 在角色进程执行模块回调函数
-  def excute_mod_fun(role_id_or_ids, mod_fun) do
-    excute_mod_fun(role_id_or_ids, mod_fun, [])
+  def execute_mod_fun(role_id_or_ids, mod_fun) do
+    execute_mod_fun(role_id_or_ids, mod_fun, [])
   end
 
-  def excute_mod_fun(role_id, mod_fun, args) when is_integer(role_id) do
-    excute_mod_fun([role_id], mod_fun, args)
+  def execute_mod_fun(role_id, mod_fun, args) when is_integer(role_id) do
+    execute_mod_fun([role_id], mod_fun, args)
   end
 
-  def excute_mod_fun(role_ids, mod_fun, args) when is_list(role_ids) do
+  def execute_mod_fun(role_ids, mod_fun, args) when is_list(role_ids) do
     for role_pid <- role_pids(role_ids) do
       Process.send(role_pid, {:callback_fun, mod_fun, args}, [:nosuspend])
     end
@@ -79,12 +79,20 @@ defmodule Role.Svr do
     cast(role_id, :offline)
   end
 
+  def role_status_change(role_id, event) do
+    cast(role_id, {:role_status_change, event})
+  end
+
   def get_data(role_id, mod) do
     call(role_id, {:apply, mod, :get_data, []})
   end
 
   def get_all_data(role_id) do
     call(role_id, :get_all_data)
+  end
+
+  def execute(role_id, mod_fun, args) do
+    call(role_id, {:execute, mod_fun, args})
   end
 
   def role_id() do
@@ -195,8 +203,8 @@ defmodule Role.Svr do
           Role.Misc.sd_err(0, inspect(x))
       end
     else
-      _ ->
-        Logger.warning("client msg decode error")
+      err ->
+        Logger.warning("client msg decode error, #{inspect(err)}")
     end
 
     last_msg_time = Util.unixtime()
@@ -228,6 +236,28 @@ defmodule Role.Svr do
     {:noreply, state}
   end
 
+  def handle_cast({:role_status_change, event}, state) do
+    for mod <- PB.modules() do
+      try do
+        if function_exported?(mod, :role_status_change, 3) do
+          old_status = Role.Misc.get_role_status()
+          apply(mod, :role_status_change, [mod.get_data(), old_status, event])
+        end
+
+        true
+      catch
+        kind, reason ->
+          Logger.error(
+            "#{mod} [role_status_change] event: [#{inspect(event)}], error !! #{inspect({kind, reason})} , #{inspect(__STACKTRACE__)} "
+          )
+
+          false
+      end
+    end
+
+    {:noreply, state}
+  end
+
   @impl true
   def handle_call({:apply, mod, f, args}, _from, state) do
     reply = :erlang.apply(mod, f, args)
@@ -241,6 +271,20 @@ defmodule Role.Svr do
       end
 
     {:reply, reply, state}
+  end
+
+  def handle_call({:execute, mod_fun, args}, _from, state) do
+    try do
+      mod = Function.info(mod_fun)[:module]
+      reply = mod_fun.(mod.get_data(), args)
+      {:reply, reply, state}
+    catch
+      {:error, err} ->
+        {:reply, {:error, err}, state}
+
+      err ->
+        {:reply, {:error, err}, state}
+    end
   end
 
   @impl true
@@ -318,9 +362,12 @@ defmodule Role.Svr do
   end
 
   def call(role_id, msg) when is_integer(role_id) do
-    role_id
-    |> via()
-    |> GenServer.call(msg)
+    with role_pid when is_pid(role_pid) <- pid(role_id) do
+      call(role_pid, msg)
+    else
+      _ ->
+        {:error, :role_not_online}
+    end
   end
 
   def call(pid, msg) when is_pid(pid) do

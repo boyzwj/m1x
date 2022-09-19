@@ -34,3 +34,13 @@ syntax = "proto3";
   message StartBattleFail2S{
     uint32 room_id = 1;
   }
+  
+  message BattleStarted2S{
+    uint32 room_id = 1;
+    uint64 battle_id = 2;
+  }
+
+  message DsMsg2C{
+    uint64 battle_id = 1;
+    bytes data = 2;
+  }

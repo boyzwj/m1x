@@ -2,7 +2,16 @@ syntax = "proto3";
 package pbm.battle;
 import "dsa.proto";
 
+message ExitBattle2S{
+
+}
+
+message ExitBattle2C{
+
+}
+
 message BattleResult2C{
     uint64 battle_id = 1;
     dsa.BattleResult battle_result = 2;
 }
+
