@@ -293,6 +293,9 @@ defmodule Matcher.Group do
          {:ok, team_ids} <- begin_to_start(state) do
       {:battle_started, team_ids}
     else
+      {:no_dsa_available, team_ids} ->
+        {:no_dsa_available, team_ids}
+
       _ ->
         :ignore
     end
@@ -311,6 +314,10 @@ defmodule Matcher.Group do
          :ok <- Lobby.Room.Svr.start_game(room_id, role_id) do
       {:ok, team_ids}
     else
+      {:error, :no_dsa_available} = error ->
+        Logger.error("start match room error : #{inspect(error)}")
+        {:no_dsa_available, team_ids}
+
       error ->
         Logger.error("start match room error : #{inspect(error)}")
         :ignore

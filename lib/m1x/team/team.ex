@@ -143,8 +143,17 @@ defmodule Team do
     end
 
     with {:ok, state} <- do_cancel_match(state, role_id) do
-      state |> sync() |> ok()
+      ~M{state|status: @status_idle}
+      |> sync_role_status(:match_canceled)
+      |> sync()
+      |> ok()
     else
+      {:error, :not_in_matching_queue} ->
+        ~M{state|status: @status_idle}
+        |> sync_role_status(:not_in_matching_queue)
+        |> sync()
+        |> ok()
+
       {:error, msg} ->
         throw(msg)
     end
@@ -221,13 +230,17 @@ defmodule Team do
     end
   end
 
+  def match_canceled(~M{%Team } = state, [:by_matcher]) do
+    ~M{state|status: @status_idle} |> sync_role_status(:canceled_by_matcher) |> sync() |> ok()
+  end
+
   def match_canceled(~M{%Team members} = state, [role_id]) do
     if !Enum.member?(members, role_id) do
       throw("玩家已不再该队伍")
     end
 
     # TODO 广播消息： [玩家名]未进行匹配确认，匹配中断
-    ~M{state|status: @status_idle} |> sync() |> ok()
+    ~M{state|status: @status_idle} |> sync_role_status(:canceled_by_leader) |> sync() |> ok()
   end
 
   defp find_free_pos(state, poses \\ @positions)
@@ -314,7 +327,7 @@ defmodule Team do
   defp do_cancel_match(~M{%Team status: @status_battle}, _role_id),
     do: {:error, "队伍还在另一场战斗中，无法取消匹配"}
 
-  defp do_cancel_match(~M{%Team status: @status_matched}, _role_id), do: {:error, "队伍匹配完成，无法取消匹配"}
+  # defp do_cancel_match(~M{%Team status: @status_matched}, _role_id), do: {:error, "队伍匹配完成，无法取消匹配"}
 
   defp do_cancel_match(~M{%Team team_id,mode,status} = state, role_id) do
     with :ok <- Matcher.Svr.cancel_match(mode, [team_id]) do

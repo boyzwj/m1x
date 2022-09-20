@@ -44,19 +44,17 @@ defmodule Role.Mod.Team do
   end
 
   defp on_init(~M{%M team_id,role_id} = state) do
-    IO.inspect(state, label: "on_init team_id != 0 ")
-
     with {:ok, ~M{%Team status}} <- Team.Svr.get_team_info(team_id, role_id) do
       set_role_status(status)
       state
     else
       {:error, :kicked} ->
-        IO.inspect("", label: "kicked")
+        Logger.debug("on_init by kicked")
         set_role_status(@role_status_idle)
         ~M{state|team_id: 0}
 
       {:error, :team_not_exist} ->
-        IO.inspect("", label: "team_not_exist")
+        Logger.debug("on_init by team_not_exist")
         set_role_status(@role_status_idle)
         ~M{state|team_id: 0}
 
@@ -76,6 +74,30 @@ defmodule Role.Mod.Team do
   def role_status_change(~M{%M}, @role_status_matching, :match_ok = msg) do
     Logger.debug(mod: __MODULE__, fun: :role_status_change, msg: inspect(msg))
     set_role_status(@role_status_matched)
+    :ok
+  end
+
+  def role_status_change(~M{%M}, @role_status_matching, :match_canceled = msg) do
+    Logger.debug(mod: __MODULE__, fun: :role_status_change, msg: inspect(msg))
+    set_role_status(@role_status_idle)
+    :ok
+  end
+
+  def role_status_change(~M{%M}, _, :not_in_matching_queue = msg) do
+    Logger.debug(mod: __MODULE__, fun: :role_status_change, msg: inspect(msg))
+    set_role_status(@role_status_idle)
+    :ok
+  end
+
+  def role_status_change(~M{%M}, @role_status_matched, :canceled_by_leader = msg) do
+    Logger.debug(mod: __MODULE__, fun: :role_status_change, msg: inspect(msg))
+    set_role_status(@role_status_idle)
+    :ok
+  end
+
+  def role_status_change(~M{%M}, @role_status_matched, :canceled_by_matcher = msg) do
+    Logger.debug(mod: __MODULE__, fun: :role_status_change, msg: inspect(msg))
+    set_role_status(@role_status_idle)
     :ok
   end
 
@@ -212,6 +234,12 @@ defmodule Role.Mod.Team do
   end
 
   def h(~M{%M team_id, role_id} = _state, ~M{%Pbm.Team.CancelMatch2S }) do
+    status = get_role_status()
+
+    if status == @role_status_matched do
+      throw("队伍匹配完成，无法取消匹配")
+    end
+
     with true <- team_id != 0 || {:error, "你不在一个队伍中"},
          :ok <- Team.Svr.cancel_match(team_id, [role_id]) do
       :ok

@@ -190,16 +190,20 @@ defmodule Lobby.Room do
     if status == @status_battle, do: throw("战斗未结束")
     if check_before_start(members) == false, do: throw("人数不足，无法开始游戏")
 
-    if room_type == @room_type_match do
-      ~M{team_ids} = ext
-      Enum.each(team_ids, &Team.Svr.begin_battle(&1, []))
+    with :ok <- Dc.Manager.start_game([map_id, room_id, members]) do
+      if room_type == @room_type_match do
+        ~M{team_ids} = ext
+        Enum.each(team_ids, &Team.Svr.begin_battle(&1, []))
+      end
+
+      Map.values(members)
+      |> Enum.each(&Role.Svr.role_status_change(&1, {:battle_start, room_type}))
+
+      ~M{state|status: @status_battle} |> ok()
+    else
+      {:error, :no_dsa_available} ->
+        throw(:no_dsa_available)
     end
-
-    Map.values(members)
-    |> Enum.each(&Role.Svr.role_status_change(&1, {:battle_start, room_type}))
-
-    Dc.Manager.start_game([map_id, room_id, members])
-    ~M{state|status: @status_battle} |> ok()
   end
 
   def exit_room(~M{%M members,member_num,owner_id} = state, role_id) do
