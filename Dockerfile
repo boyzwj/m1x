@@ -22,29 +22,27 @@ RUN apk add --update npm
 # Prepare app dir
 RUN mkdir /app
 WORKDIR /app
-ENV HOME=/app
 
 
+
+ARG NODE_NAME
+ENV NODE_NAME=${NODE_NAME}
+
+RUN git clone https://github.com/boyzwj/m1x.git
+WORKDIR m1x
+
+
+# set build ENV
 ENV MIX_ENV=prod
 
 
 # Install Hex and Rebar
 RUN mix local.hex --force && \
-    mix local.rebar --
+    mix local.rebar --force
 
 # Install mix dependencies
-COPY mix.exs mix.lock ./
-COPY config config
-
-RUN mix do deps.get, deps.compile
-
-# copy source code
-COPY rel rel
-COPY lib lib
-COPY priv priv
-COPY assets assets
-
-
+RUN mix deps.get --only $MIX_ENV
+RUN mix deps.compile
 
 RUN cd assets && npm install
 RUN mix assets.deploy
