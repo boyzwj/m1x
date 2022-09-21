@@ -72,8 +72,7 @@ defmodule M1x.MixProject do
       {:memoize, "~> 1.4"},
       {:petal_components, "~> 0.17.6"},
       {:hut, "~> 1.4", manager: :rebar3, override: true},
-      {:memento, "~> 0.3.2"},
-      {:mnesia_eleveldb, git: "https://github.com/klarna/mnesia_eleveldb.git", tag: "master"}
+      {:memento, "~> 0.3.2"}
     ]
   end
 
@@ -86,9 +85,6 @@ defmodule M1x.MixProject do
   defp aliases do
     [
       setup: ["deps.get", "ecto.setup", "cmd --cd assets npm install"],
-      "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
-      "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.deploy": [
         "cmd --cd assets npm run deploy",
         "esbuild default --minify",

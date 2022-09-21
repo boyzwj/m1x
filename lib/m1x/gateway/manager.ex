@@ -11,7 +11,6 @@ defmodule Gateway.Manager do
   @impl true
   def init(_init_arg) do
     Memento.start()
-    :mnesia_eleveldb.register()
     Process.send_after(self(), :loop, @init_delay)
     {:ok, %{}}
   end

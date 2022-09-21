@@ -1,13 +1,13 @@
 #!/bin/sh
 if [ ! -n "$REMOTE_HOST" ]; then
-  REMOTE_HOST=tom@192.168.15.101
+  REMOTE_HOST=root@192.168.15.200
 fi
 
 if [ ! -n "$NODE_NAME" ]; then
   NODE_NAME=develop
 fi
 
-REMOTE_PASS="1"
+REMOTE_PASS="qweasd1004"
 
 echo "update server to $REMOTE_HOST"
 
@@ -22,9 +22,9 @@ sudo rsync -rltDvz --password-file=/etc/rsyncd.passwd _build/prod/rel/ $REMOTE_H
 echo '>>>>  upload finish  <<<<'
 echo 'begin restart server'
 
-sshpass -p "1" ssh -t $REMOTE_HOST "sudo RELEASE_NODE=$NODE_NAME /release/m1x/bin/m1x stop"
-sshpass -p "1" ssh -t $REMOTE_HOST "sudo PHX_SERVER=true RELEASE_NODE=$NODE_NAME DB_PATH=\$HOME/db_data/$NODE_NAME /release/m1x/bin/m1x daemon_iex"
+ssh -t $REMOTE_HOST "RELEASE_NODE=$NODE_NAME /release/m1x/bin/m1x stop"
+ssh -t $REMOTE_HOST "PHX_SERVER=true RELEASE_NODE=$NODE_NAME DB_PATH=/databases/$NODE_NAME /release/m1x/bin/m1x daemon"
 echo 'begin restart dsa'
-sshpass -p "1" ssh -t $REMOTE_HOST "sudo RELEASE_NODE=dsa_1 /release/m1x/bin/m1x stop"
-sshpass -p "1" ssh -t $REMOTE_HOST "sudo RELEASE_NODE=dsa_1 DSA_PORT=20081 /release/m1x/bin/m1x daemon_iex"
+ssh -t $REMOTE_HOST "RELEASE_NODE=dsa_1 /release/m1x/bin/m1x stop"
+ssh -t $REMOTE_HOST "RELEASE_NODE=dsa_1 DSA_PORT=20081 /release/m1x/bin/m1x daemon"
 echo '>>>>  restart finish <<<<'
