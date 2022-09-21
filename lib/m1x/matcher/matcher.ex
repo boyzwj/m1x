@@ -29,8 +29,10 @@ defmodule Matcher do
 
   defp random_map_by_mode(mode) do
     Data.GameModeMap.query(&(&1.mode_id == mode))
-    |> Enum.random()
-    |> Map.get(:id)
+    |> Enum.map(fn ~M{id,weight} -> List.duplicate(id, weight) end)
+    |> Enum.concat()
+    |> Util.shuffle()
+    |> List.first()
   end
 
   def init_pool() do

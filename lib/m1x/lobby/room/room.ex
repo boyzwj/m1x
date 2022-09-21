@@ -57,9 +57,9 @@ defmodule Lobby.Room do
         ~M{%M room_id,room_type,map_id,password,create_time,last_game_time,owner_id,room_name,lv_limit,round_total,round_time,enable_invite}
         |> do_join(role_ids)
       else
-        ~M{ext} = args
+        ~M{ext,members} = args
 
-        ~M{%M room_id,room_type,map_id,password,create_time,last_game_time,owner_id,ext}
+        ~M{%M room_id,room_type,map_id,password,create_time,last_game_time,owner_id,ext,members}
         |> do_join(role_ids)
       end
 
@@ -173,8 +173,14 @@ defmodule Lobby.Room do
   defp do_join(state, []), do: state
 
   defp do_join(~M{%M members, member_num} = state, [role_id | t]) do
-    pos = find_free_pos(state)
-    members = members |> Map.put(pos, role_id)
+    members =
+      if Enum.find_value(members, &(elem(&1, 1) == role_id)) do
+        members
+      else
+        pos = find_free_pos(state)
+        members |> Map.put(pos, role_id)
+      end
+
     add_role_id(role_id)
     member_num = member_num + 1
 

@@ -83,6 +83,12 @@ defmodule Role.Mod.Team do
     :ok
   end
 
+  def role_status_change(~M{%M}, @role_status_matched, :match_canceled = msg) do
+    Logger.debug(mod: __MODULE__, fun: :role_status_change, msg: inspect(msg))
+    set_role_status(@role_status_idle)
+    :ok
+  end
+
   def role_status_change(~M{%M}, _, :not_in_matching_queue = msg) do
     Logger.debug(mod: __MODULE__, fun: :role_status_change, msg: inspect(msg))
     set_role_status(@role_status_idle)
