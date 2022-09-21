@@ -52,7 +52,6 @@ defmodule Role.Mod.Mail do
            Mail.add_mails(role_id, global_mails, last_mail_id, mail_ids, nil),
          ~M{%Mail id: last_gmail_id} <- List.last(global_mails) do
       ~M{state|last_mail_id,mail_ids,last_gmail_id} |> set_data()
-      IO.inspect(mail_ids, label: "secondloop")
       broadcast_mails(new_brief_mails)
     end
   end

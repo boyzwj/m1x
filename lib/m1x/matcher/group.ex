@@ -293,24 +293,32 @@ defmodule Matcher.Group do
          {:ok, team_ids} <- begin_to_start(state) do
       {:battle_started, team_ids}
     else
+      {:no_dsa_available, team_ids} ->
+        {:no_dsa_available, team_ids}
+
       _ ->
         :ignore
     end
   end
 
-  def begin_to_start(~M{%__MODULE__  all_role_ids,token,side1,side2}) do
+  def begin_to_start(~M{%__MODULE__  all_role_ids,token,side1,side2,infos}) do
     # map_id = 10_051_068
     map_id = Matcher.random_map_id()
 
     team_ids = (side1 ++ side2) |> Enum.map(& &1.team_id)
     ext = ~M{team_ids}
     role_id = List.first(all_role_ids)
+    members = Enum.map(infos, fn {pos, x} -> {pos, x.role_id} end) |> Enum.into(%{})
 
     with {:ok, room_id} <-
-           Lobby.Svr.create_room([@room_type_match, all_role_ids, map_id, token, ~M{ext}]),
+           Lobby.Svr.create_room([@room_type_match, all_role_ids, map_id, token, ~M{ext,members}]),
          :ok <- Lobby.Room.Svr.start_game(room_id, role_id) do
       {:ok, team_ids}
     else
+      {:error, :no_dsa_available} = error ->
+        Logger.error("start match room error : #{inspect(error)}")
+        {:no_dsa_available, team_ids}
+
       error ->
         Logger.error("start match room error : #{inspect(error)}")
         :ignore

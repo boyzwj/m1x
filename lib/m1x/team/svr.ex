@@ -24,7 +24,7 @@ defmodule Team.Svr do
 
   def cancel_match(team_id, args) do
     {func, _} = __ENV__.function
-    cast(team_id, {func, args})
+    call(team_id, {func, args})
   end
 
   def match_ok(team_id, args) do

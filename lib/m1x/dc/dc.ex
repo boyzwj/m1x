@@ -54,9 +54,8 @@ defmodule Dc do
 
       {:ok, ~M{state| room_list}}
     else
-      err ->
-        Logger.error(err: inspect(err), label: "no_dsa_alivable")
-        {:error, :no_dsa_alivable}
+      _ ->
+        throw(:no_dsa_available)
     end
   end
 

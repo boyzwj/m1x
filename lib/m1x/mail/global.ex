@@ -5,9 +5,7 @@ defmodule Mail.Global do
 
   defstruct mails: nil, max_mail_id: 0, is_dirty: false
 
-  def db_key() do
-    __MODULE__
-  end
+  @limit 1000
 
   # 发送全服系统邮件
   @spec send_mail(neg_integer(), list(), neg_integer()) :: :ok
@@ -123,10 +121,7 @@ defmodule Mail.Global do
   # desc
   defp load_mails() do
     try do
-      mails =
-        Redis.lrange(db_key(), -1000, -1)
-        |> Enum.reduce([], fn x, acc -> [Poison.decode!(x, as: %Mail{}) | acc] end)
-
+      mails = Dba.load_global_mails(limit: @limit)
       last_mail = List.first(mails, %Mail{id: 0})
       %__MODULE__{mails: mails, max_mail_id: last_mail.id}
     catch
@@ -136,6 +131,6 @@ defmodule Mail.Global do
   end
 
   defp save_mail(%Mail{} = mail) do
-    Redis.rpush(db_key(), Map.from_struct(mail))
+    Dba.save_global_mail(mail)
   end
 end

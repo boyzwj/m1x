@@ -22,11 +22,38 @@ defmodule Mnesia.Storage.Global do
   # end
 end
 
+defmodule Mnesia.Storage.Rank do
+  use Memento.Table,
+    attributes: [:key, :set, :indexs]
+end
+
+defmodule Mnesia.Storage.GlobalMail do
+  use Memento.Table,
+    attributes: [:id, :mail],
+    type: :ordered_set
+end
+
+defmodule Mnesia.Storage.PersonalMail do
+  use Memento.Table,
+    attributes: [:role_id, :mails],
+    type: :ordered_set
+end
+
+defmodule Mnesia.Storage.Mail do
+  use Memento.Table,
+    attributes: [:key, :role_id, :mail],
+    index: [:role_id]
+end
+
 defmodule Dba.Mnesia.Def do
   def stores() do
     [
       Mnesia.Storage.Account,
-      Mnesia.Storage.Global
+      Mnesia.Storage.Global,
+      Mnesia.Storage.Rank,
+      Mnesia.Storage.GlobalMail,
+      Mnesia.Storage.PersonalMail,
+      Mnesia.Storage.Mail
     ]
   end
 

@@ -57,9 +57,9 @@ defmodule Lobby.Room do
         ~M{%M room_id,room_type,map_id,password,create_time,last_game_time,owner_id,room_name,lv_limit,round_total,round_time,enable_invite}
         |> do_join(role_ids)
       else
-        ~M{ext} = args
+        ~M{ext,members} = args
 
-        ~M{%M room_id,room_type,map_id,password,create_time,last_game_time,owner_id,ext}
+        ~M{%M room_id,room_type,map_id,password,create_time,last_game_time,owner_id,ext,members}
         |> do_join(role_ids)
       end
 
@@ -109,12 +109,7 @@ defmodule Lobby.Room do
       throw("对方不在房间")
     end
 
-    members =
-      for {k, v} <- members, into: %{} do
-        (v == t_role_id && nil) || v
-        {k, v}
-      end
-
+    members = for {k, v} <- members, v != t_role_id, into: %{}, do: {k, v}
     member_num = member_num - 1
     del_role_id(t_role_id)
     %Pbm.Room.Kick2C{role_id: t_role_id} |> broad_cast()
@@ -164,11 +159,12 @@ defmodule Lobby.Room do
     end
   end
 
-  def join(~M{%M room_id,password,member_num,map_id} = state, [role_id, tpassword]) do
+  def join(~M{%M room_id,password,member_num,map_id,status} = state, [role_id, tpassword]) do
     tpassword = String.trim(tpassword)
     tpassword = Util.md5("#{map_id}@#{tpassword}") |> Base.encode16(case: :lower)
     if password != "" && password != tpassword, do: throw("房间密码不正确")
     if member_num >= length(@positions), do: throw("房间已满")
+    if status == @status_battle, do: throw("房间在战斗中")
     state = do_join(state, [role_id])
     ~M{%Pbm.Room.Join2C role_id, room_id} |> broad_cast()
     state |> sync() |> ok()
@@ -177,8 +173,14 @@ defmodule Lobby.Room do
   defp do_join(state, []), do: state
 
   defp do_join(~M{%M members, member_num} = state, [role_id | t]) do
-    pos = find_free_pos(state)
-    members = members |> Map.put(pos, role_id)
+    members =
+      if Enum.find_value(members, &(elem(&1, 1) == role_id)) do
+        members
+      else
+        pos = find_free_pos(state)
+        members |> Map.put(pos, role_id)
+      end
+
     add_role_id(role_id)
     member_num = member_num + 1
 
@@ -192,18 +194,22 @@ defmodule Lobby.Room do
   def start_game(~M{%M room_id,owner_id, map_id,members,room_type,ext,status} = state, role_id) do
     if role_id != owner_id, do: throw("你不是房主")
     if status == @status_battle, do: throw("战斗未结束")
-    # if check_before_start(members) == false, do: throw("人数不足，无法开始游戏")
+    if check_before_start(members) == false, do: throw("人数不足，无法开始游戏")
 
-    if room_type == @room_type_match do
-      ~M{team_ids} = ext
-      Enum.each(team_ids, &Team.Svr.begin_battle(&1, []))
+    with :ok <- Dc.Manager.start_game([map_id, room_id, members]) do
+      if room_type == @room_type_match do
+        ~M{team_ids} = ext
+        Enum.each(team_ids, &Team.Svr.begin_battle(&1, []))
+      end
+
+      Map.values(members)
+      |> Enum.each(&Role.Svr.role_status_change(&1, {:battle_start, room_type}))
+
+      ~M{state|status: @status_battle} |> ok()
+    else
+      {:error, :no_dsa_available} ->
+        throw(:no_dsa_available)
     end
-
-    Map.values(members)
-    |> Enum.each(&Role.Svr.role_status_change(&1, {:battle_start, room_type}))
-
-    Dc.Manager.start_game([map_id, room_id, members])
-    ~M{state|status: @status_battle} |> ok()
   end
 
   def exit_room(~M{%M members,member_num,owner_id} = state, role_id) do
@@ -341,8 +347,12 @@ defmodule Lobby.Room do
     |> set_role_ids()
   end
 
-  defp sync(~M{%M room_id, owner_id,status,member_num, map_id, members,create_time} = state) do
-    room = ~M{%Pbm.Room.Room  room_id,owner_id,status,map_id,members,member_num,create_time}
+  defp sync(
+         ~M{%M room_id, owner_id,status,member_num, map_id, members,create_time,room_name} = state
+       ) do
+    room =
+      ~M{%Pbm.Room.Room  room_id,owner_id,status,map_id,members,member_num,create_time,room_name}
+
     ~M{%Pbm.Room.Update2C room} |> broad_cast()
     state
   end
@@ -368,7 +378,7 @@ defmodule Lobby.Room do
   defp check_before_start(members) do
     members
     |> Enum.filter(&(elem(&1, 0) < 10))
-    |> Enum.group_by(&(elem(&1, 0) <= 4))
+    |> Enum.group_by(&(elem(&1, 0) <= 5))
     |> Map.values()
     |> Enum.all?(&(length(&1) > 1))
   end

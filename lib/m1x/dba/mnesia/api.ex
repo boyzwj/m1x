@@ -1,4 +1,6 @@
 defmodule Dba.Mnesia.Api do
+  import ShorterMaps
+
   def save_role_data(data) do
     tab = data.__struct__
     key = data.role_id
@@ -41,6 +43,83 @@ defmodule Dba.Mnesia.Api do
       _ ->
         nil
     end
+  end
+
+  def set_rank_info(key, sortedset, indexs) do
+    ~M{%Mnesia.Storage.Rank key, set: sortedset, indexs}
+    |> dirty_write()
+  end
+
+  def get_rank_info(key) do
+    with ~M{%Mnesia.Storage.Rank set,indexs} <- dirty_read(Mnesia.Storage.Rank, key) do
+      ~M{set,indexs}
+    else
+      _ ->
+        nil
+    end
+  end
+
+  def set_mail(role_id, mail_id, ~M{%Mail } = mail) do
+    key = "#{role_id}:#{mail_id}"
+
+    ~M{%Mnesia.Storage.Mail key, role_id, mail}
+    |> dirty_write()
+  end
+
+  def get_mail(role_id, mail_id) do
+    key = "#{role_id}:#{mail_id}"
+
+    with ~M{%Mnesia.Storage.Mail mail} <- dirty_read(Mnesia.Storage.Mail, key) do
+      mail
+    else
+      _ ->
+        nil
+    end
+  end
+
+  def load_global_mails([{:limit, limit} | _]) do
+    max_id =
+      case Memento.transaction!(fn -> :mnesia.last(Mnesia.Storage.GlobalMail) end) do
+        :"$end_of_table" ->
+          0
+
+        id ->
+          id
+      end
+
+    range = min(0, max_id - limit)
+
+    Memento.transaction!(fn ->
+      Memento.Query.select(Mnesia.Storage.GlobalMail, {:>, :id, range})
+      |> Enum.map(& &1.mail)
+    end)
+  end
+
+  def save_global_mail(%Mail{id: id} = mail) do
+    ~M{%Mnesia.Storage.GlobalMail id, mail}
+    |> dirty_write()
+  end
+
+  def load_personal_mails(role_id) do
+    with ~M{%Mnesia.Storage.PersonalMail mails} <-
+           dirty_read(Mnesia.Storage.PersonalMail, role_id) do
+      mails
+    else
+      _ ->
+        []
+    end
+  end
+
+  def add_personal_mail(role_id, %Mail{} = mail) do
+    mails = load_personal_mails(role_id)
+
+    ~M{%Mnesia.Storage.PersonalMail role_id, mails:  [mail | mails]}
+    |> dirty_write()
+  end
+
+  def clear_personal_mails(role_id) do
+    key = "Mail.Personal:#{role_id}"
+    Redis.del(key)
   end
 
   def make_role_id() do

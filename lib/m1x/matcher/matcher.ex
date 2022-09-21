@@ -29,8 +29,10 @@ defmodule Matcher do
 
   defp random_map_by_mode(mode) do
     Data.GameModeMap.query(&(&1.mode_id == mode))
-    |> Enum.random()
-    |> Map.get(:id)
+    |> Enum.map(fn ~M{id,weight} -> List.duplicate(id, weight) end)
+    |> Enum.concat()
+    |> Util.shuffle()
+    |> List.first()
   end
 
   def init_pool() do
@@ -90,7 +92,7 @@ defmodule Matcher do
 
   def cancel_match(~M{%__MODULE__ team_ids} = state, [team_id]) do
     if not MapSet.member?(team_ids, team_id) do
-      throw("不在匹配队列中了")
+      throw(:not_in_matching_queue)
     end
 
     with :ok <- MTeam.delete(team_id) do
@@ -176,6 +178,13 @@ defmodule Matcher do
           Enum.each(tids, &MTeam.delete(&1))
           Group.rm_from_waiting_list(token)
           team_ids = Enum.reduce(tids, team_ids, fn x, acc -> MapSet.delete(acc, x) end)
+          ~M{state_acc|team_ids}
+
+        {:no_dsa_available, tids} ->
+          Enum.each(tids, &MTeam.delete(&1))
+          Group.rm_from_waiting_list(token)
+          team_ids = Enum.reduce(tids, team_ids, fn x, acc -> MapSet.delete(acc, x) end)
+          Enum.each(tids, &Team.Svr.match_canceled(&1, [:by_matcher]))
           ~M{state_acc|team_ids}
 
         :ignore ->
