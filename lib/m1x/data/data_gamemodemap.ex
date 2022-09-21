@@ -12,70 +12,80 @@ defmodule Data.GameModeMap do
 	def get(10021070) do
 		%{
 			id: 10021070,
-			mode_id: 1002
+			mode_id: 1002,
+			weight: 100
 		}
 	end
 
 	def get(10021071) do
 		%{
 			id: 10021071,
-			mode_id: 1002
+			mode_id: 1002,
+			weight: 0
 		}
 	end
 
 	def get(10021072) do
 		%{
 			id: 10021072,
-			mode_id: 1002
+			mode_id: 1002,
+			weight: 0
 		}
 	end
 
 	def get(10021073) do
 		%{
 			id: 10021073,
-			mode_id: 1002
+			mode_id: 1002,
+			weight: 0
 		}
 	end
 
 	def get(10021074) do
 		%{
 			id: 10021074,
-			mode_id: 1002
+			mode_id: 1002,
+			weight: 0
 		}
 	end
 
 	def get(10051071) do
 		%{
 			id: 10051071,
-			mode_id: 1005
+			mode_id: 1005,
+			weight: 100
 		}
 	end
 
 	def get(10051072) do
 		%{
 			id: 10051072,
-			mode_id: 1005
+			mode_id: 1005,
+			weight: 0
 		}
 	end
 
 	def get(10051073) do
 		%{
 			id: 10051073,
-			mode_id: 1005
+			mode_id: 1005,
+			weight: 0
 		}
 	end
 
 	def get(10051074) do
 		%{
 			id: 10051074,
-			mode_id: 1005
+			mode_id: 1005,
+			weight: 0
 		}
 	end
 
 	def get(10051075) do
 		%{
 			id: 10051075,
-			mode_id: 1005
+			mode_id: 1005,
+			weight: 0
 		}
 	end
 
