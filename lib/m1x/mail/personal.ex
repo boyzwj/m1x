@@ -22,14 +22,12 @@ defmodule Mail.Personal do
   # 获取信箱所有邮件 asc
   @spec fetch_all_mails(neg_integer()) :: [%Mail{}]
   def fetch_all_mails(role_id) do
-    db_key(role_id)
-    |> Redis.lrange(0, -1)
-    |> Enum.map(&Poison.decode!(&1, as: %Mail{}))
+    Dba.load_personal_mails(role_id)
   end
 
   # 清除信箱
   def clear_mails(role_id) do
-    db_key(role_id) |> Redis.del()
+    Dba.clear_personal_mails(role_id)
   end
 
   defp do_send_mail(role_id, mail) when is_integer(role_id), do: do_send_mail([role_id], mail)
@@ -42,7 +40,6 @@ defmodule Mail.Personal do
   end
 
   defp save_mail(role_id, %Mail{} = mail) do
-    content = Map.from_struct(mail)
-    db_key(role_id) |> Redis.rpush(content)
+    Dba.add_personal_mail(role_id, mail)
   end
 end

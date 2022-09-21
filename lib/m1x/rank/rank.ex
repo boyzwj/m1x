@@ -13,7 +13,7 @@ defmodule Rank do
       @limit unquote(opts[:limit] || 100_000)
 
       @type rank_item :: {non_neg_integer(), non_neg_integer()}
-      @dump_interval 60 * 5 * 1000
+      @dump_interval 60 * 1 * 1000
       alias Discord.SortedSet
       # indexs: %{id => score}
       defstruct set: nil, indexs: %{}, is_dirty: false
@@ -223,14 +223,12 @@ defmodule Rank do
 
       defp load() do
         try do
-          temp = Redis.get(key())
-
-          if is_nil(temp) do
-            set = SortedSet.new(@capacity, @bucket_size)
-            %__MODULE__{set: set}
-          else
-            %{set: set, indexs: indexs} = :erlang.binary_to_term(temp)
+          with %{set: set, indexs: indexs} <- Dba.get_rank_info(key()) do
             %__MODULE__{set: SortedSet.from_proper_enumerable(set), indexs: indexs}
+          else
+            _ ->
+              set = SortedSet.new(@capacity, @bucket_size)
+              %__MODULE__{set: set}
           end
         catch
           error ->
@@ -243,8 +241,7 @@ defmodule Rank do
 
       defp dump(%__MODULE__{set: set, indexs: indexs} = state) do
         try do
-          val = %{set: SortedSet.to_list(set), indexs: indexs} |> :erlang.term_to_binary()
-          "OK" = Redis.set(key(), val)
+          "OK" = Dba.set_rank_info(key(), SortedSet.to_list(set), indexs)
           put_in(state.is_dirty, false)
         catch
           error ->

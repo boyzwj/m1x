@@ -97,24 +97,11 @@ defmodule Mail do
   end
 
   def save(~M{%Mail id} = mail, role_id) do
-    value = Map.from_struct(mail) |> Poison.encode!()
-    db_key(role_id, id) |> Redis.set(value)
+    Dba.set_mail(role_id, id, mail)
   end
 
   def get(role_id, mail_id) do
-    value =
-      db_key(role_id, mail_id)
-      |> Redis.get()
-
-    if is_nil(value) do
-      nil
-    else
-      value |> Poison.decode!(as: %Mail{})
-    end
-  end
-
-  def set(role_id, mail_id, value) do
-    db_key(role_id, mail_id) |> Redis.set(value)
+    Dba.get_mail(role_id, mail_id)
   end
 
   def update_pagination(mail_ids) do
